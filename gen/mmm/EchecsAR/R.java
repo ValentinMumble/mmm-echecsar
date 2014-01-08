@@ -55,13 +55,11 @@ public final class R {
         public static final int button_start=0x7f060006;
         public static final int content_desc_vuforia_background=0x7f060008;
         public static final int content_desc_vuforia_logo=0x7f060007;
-        public static final int menu_camera_title=0x7f06000f;
+        public static final int menu_camera_title=0x7f06000d;
         public static final int menu_contAutofocus_off=0x7f06000c;
         public static final int menu_contAutofocus_on=0x7f06000b;
         public static final int menu_flash_off=0x7f06000a;
         public static final int menu_flash_on=0x7f060009;
-        public static final int menu_switch_to_stone_chips=0x7f06000e;
-        public static final int menu_switch_to_tarmac=0x7f06000d;
     }
     public static final class style {
         public static final int ImageTargetsTheme=0x7f070000;
