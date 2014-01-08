@@ -77,8 +77,7 @@ QCAR::Matrix44F projectionMatrix;
 // Constants:
 static const float kObjectScale = 3.f;
 
-QCAR::DataSet* dataSetStonesAndChips    = 0;
-QCAR::DataSet* dataSetTarmac            = 0;
+QCAR::DataSet* dataSetCheckerboard            = 0;
 
 bool switchDataSetAsap          = false;
 
@@ -95,23 +94,13 @@ class ImageTargets_UpdateCallback : public QCAR::UpdateCallback
             QCAR::TrackerManager& trackerManager = QCAR::TrackerManager::getInstance();
             QCAR::ImageTracker* imageTracker = static_cast<QCAR::ImageTracker*>(
                 trackerManager.getTracker(QCAR::Tracker::IMAGE_TRACKER));
-            if (imageTracker == 0 || dataSetStonesAndChips == 0 || dataSetTarmac == 0 ||
+            if (imageTracker == 0 || dataSetCheckerboard == 0 ||
                 imageTracker->getActiveDataSet() == 0)
             {
                 LOG("Failed to switch data set.");
                 return;
             }
-            
-            if (imageTracker->getActiveDataSet() == dataSetStonesAndChips)
-            {
-                imageTracker->deactivateDataSet(dataSetStonesAndChips);
-                imageTracker->activateDataSet(dataSetTarmac);
-            }
-            else
-            {
-                imageTracker->deactivateDataSet(dataSetTarmac);
-                imageTracker->activateDataSet(dataSetStonesAndChips);
-            }
+            imageTracker->activateDataSet(dataSetCheckerboard);
         }
     }
 };
@@ -190,36 +179,22 @@ Java_mmm_EchecsAR_ImageTargets_loadTrackerData(JNIEnv *, jobject)
         return 0;
     }
 
-    // Create the data sets:
-    dataSetStonesAndChips = imageTracker->createDataSet();
-    if (dataSetStonesAndChips == 0)
+    // Create the data sets
+    dataSetCheckerboard = imageTracker->createDataSet();
+    if (dataSetCheckerboard == 0)
     {
         LOG("Failed to create a new tracking data.");
         return 0;
     }
 
-    dataSetTarmac = imageTracker->createDataSet();
-    if (dataSetTarmac == 0)
-    {
-        LOG("Failed to create a new tracking data.");
-        return 0;
-    }
-
-    // Load the data sets:
-    if (!dataSetStonesAndChips->load("StonesAndChips.xml", QCAR::DataSet::STORAGE_APPRESOURCE))
-    {
-        LOG("Failed to load data set.");
-        return 0;
-    }
-
-    if (!dataSetTarmac->load("Tarmac.xml", QCAR::DataSet::STORAGE_APPRESOURCE))
+    if (!dataSetCheckerboard->load("checkerboard.xml", QCAR::DataSet::STORAGE_APPRESOURCE))
     {
         LOG("Failed to load data set.");
         return 0;
     }
 
     // Activate the data set:
-    if (!imageTracker->activateDataSet(dataSetStonesAndChips))
+    if (!imageTracker->activateDataSet(dataSetCheckerboard))
     {
         LOG("Failed to activate data set.");
         return 0;
@@ -246,44 +221,24 @@ Java_mmm_EchecsAR_ImageTargets_destroyTrackerData(JNIEnv *, jobject)
         return 0;
     }
     
-    if (dataSetStonesAndChips != 0)
+    if (dataSetCheckerboard != 0)
     {
-        if (imageTracker->getActiveDataSet() == dataSetStonesAndChips &&
-            !imageTracker->deactivateDataSet(dataSetStonesAndChips))
+        if (imageTracker->getActiveDataSet() == dataSetCheckerboard &&
+            !imageTracker->deactivateDataSet(dataSetCheckerboard))
         {
-            LOG("Failed to destroy the tracking data set StonesAndChips because the data set "
+            LOG("Failed to destroy the tracking data set Checkerboard because the data set "
                 "could not be deactivated.");
             return 0;
         }
 
-        if (!imageTracker->destroyDataSet(dataSetStonesAndChips))
+        if (!imageTracker->destroyDataSet(dataSetCheckerboard))
         {
-            LOG("Failed to destroy the tracking data set StonesAndChips.");
+            LOG("Failed to destroy the tracking data set Checkerboard.");
             return 0;
         }
 
-        LOG("Successfully destroyed the data set StonesAndChips.");
-        dataSetStonesAndChips = 0;
-    }
-
-    if (dataSetTarmac != 0)
-    {
-        if (imageTracker->getActiveDataSet() == dataSetTarmac &&
-            !imageTracker->deactivateDataSet(dataSetTarmac))
-        {
-            LOG("Failed to destroy the tracking data set Tarmac because the data set "
-                "could not be deactivated.");
-            return 0;
-        }
-
-        if (!imageTracker->destroyDataSet(dataSetTarmac))
-        {
-            LOG("Failed to destroy the tracking data set Tarmac.");
-            return 0;
-        }
-
-        LOG("Successfully destroyed the data set Tarmac.");
-        dataSetTarmac = 0;
+        LOG("Successfully destroyed the data set Checkerboard.");
+        dataSetCheckerboard = 0;
     }
 
     return 1;
