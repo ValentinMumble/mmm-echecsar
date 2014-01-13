@@ -1,29 +1,15 @@
-/*==============================================================================
-Copyright (c) 2010-2013 QUALCOMM Austria Research Center GmbH.
-All Rights Reserved.
 
-@file 
-    ImageTargets.cpp
-
-@brief
-    Sample for ImageTargets
-
-==============================================================================*/
-
-
+#include <cstdlib>
+#include <time.h>
 #include <jni.h>
 #include <android/log.h>
 #include <stdio.h>
 #include <string.h>
 #include <assert.h>
 
-#ifdef USE_OPENGL_ES_1_1
-#include <GLES/gl.h>
-#include <GLES/glext.h>
-#else
+
 #include <GLES2/gl2.h>
 #include <GLES2/gl2ext.h>
-#endif
 
 #include <QCAR/QCAR.h>
 #include <QCAR/CameraDevice.h>
@@ -44,6 +30,7 @@ All Rights Reserved.
 #include "Texture.h"
 #include "CubeShaders.h"
 #include "Teapot.h"
+#include "chessmen/BowlAndSpoonModel.h"
 
 #ifdef __cplusplus
 extern "C"
@@ -75,7 +62,9 @@ bool isActivityInPortraitMode   = false;
 QCAR::Matrix44F projectionMatrix;
 
 // Constants:
-static const float kObjectScale = 3.f;
+static const float kObjectScaleX = 120.0f * 0.15f;
+static const float kObjectScaleY = 120.0f * 0.15f;
+static const float kObjectScaleZ = 120.0f * 0.15f;
 
 QCAR::DataSet* dataSetCheckerboard            = 0;
 
@@ -110,11 +99,7 @@ ImageTargets_UpdateCallback updateCallback;
 JNIEXPORT int JNICALL
 Java_mmm_EchecsAR_ImageTargets_getOpenGlEsVersionNative(JNIEnv *, jobject)
 {
-#ifdef USE_OPENGL_ES_1_1        
-    return 1;
-#else
     return 2;
-#endif
 }
 
 
@@ -270,17 +255,6 @@ Java_mmm_EchecsAR_ImageTargetsRenderer_renderFrame(JNIEnv *, jobject)
     
     // Explicitly render the Video Background
     QCAR::Renderer::getInstance().drawVideoBackground();
-       
-#ifdef USE_OPENGL_ES_1_1
-    // Set GL11 flags:
-    glEnableClientState(GL_VERTEX_ARRAY);
-    glEnableClientState(GL_NORMAL_ARRAY);
-    glEnableClientState(GL_TEXTURE_COORD_ARRAY);
-
-    glEnable(GL_TEXTURE_2D);
-    glDisable(GL_LIGHTING);
-        
-#endif
 
     glEnable(GL_DEPTH_TEST);
 
@@ -304,48 +278,15 @@ Java_mmm_EchecsAR_ImageTargetsRenderer_renderFrame(JNIEnv *, jobject)
         QCAR::Matrix44F modelViewMatrix =
             QCAR::Tool::convertPose2GLMatrix(result->getPose());        
 
-        // Choose the texture based on the target name:
-        int textureIndex;
-        if (strcmp(trackable.getName(), "chips") == 0)
-        {
-            textureIndex = 0;
-        }
-        else if (strcmp(trackable.getName(), "stones") == 0)
-        {
-            textureIndex = 1;
-        }
-        else
-        {
-            textureIndex = 2;
-        }
+        int textureIndex = 0;
 
         const Texture* const thisTexture = textures[textureIndex];
 
-#ifdef USE_OPENGL_ES_1_1
-        // Load projection matrix:
-        glMatrixMode(GL_PROJECTION);
-        glLoadMatrixf(projectionMatrix.data);
-
-        // Load model view matrix:
-        glMatrixMode(GL_MODELVIEW);
-        glLoadMatrixf(modelViewMatrix.data);
-        glTranslatef(0.f, 0.f, kObjectScale);
-        glScalef(kObjectScale, kObjectScale, kObjectScale);
-
-        // Draw object:
-        glBindTexture(GL_TEXTURE_2D, thisTexture->mTextureID);
-        glTexCoordPointer(2, GL_FLOAT, 0, (const GLvoid*) &teapotTexCoords[0]);
-        glVertexPointer(3, GL_FLOAT, 0, (const GLvoid*) &teapotVertices[0]);
-        glNormalPointer(GL_FLOAT, 0,  (const GLvoid*) &teapotNormals[0]);
-        glDrawElements(GL_TRIANGLES, NUM_TEAPOT_OBJECT_INDEX, GL_UNSIGNED_SHORT,
-                       (const GLvoid*) &teapotIndices[0]);
-#else
-
         QCAR::Matrix44F modelViewProjection;
 
-        SampleUtils::translatePoseMatrix(0.0f, 0.0f, kObjectScale,
+        SampleUtils::translatePoseMatrix(0.0f, 0.0f, 0.0f,
                                          &modelViewMatrix.data[0]);
-        SampleUtils::scalePoseMatrix(kObjectScale, kObjectScale, kObjectScale,
+        SampleUtils::scalePoseMatrix(kObjectScaleX, kObjectScaleY, kObjectScaleZ,
                                      &modelViewMatrix.data[0]);
         SampleUtils::multiplyMatrix(&projectionMatrix.data[0],
                                     &modelViewMatrix.data[0] ,
@@ -354,11 +295,11 @@ Java_mmm_EchecsAR_ImageTargetsRenderer_renderFrame(JNIEnv *, jobject)
         glUseProgram(shaderProgramID);
          
         glVertexAttribPointer(vertexHandle, 3, GL_FLOAT, GL_FALSE, 0,
-                              (const GLvoid*) &teapotVertices[0]);
+                              (const GLvoid*) &objectVertices[0]);
         glVertexAttribPointer(normalHandle, 3, GL_FLOAT, GL_FALSE, 0,
-                              (const GLvoid*) &teapotNormals[0]);
+                              (const GLvoid*) &objectNormals[0]);
         glVertexAttribPointer(textureCoordHandle, 2, GL_FLOAT, GL_FALSE, 0,
-                              (const GLvoid*) &teapotTexCoords[0]);
+                              (const GLvoid*) &objectTexCoords[0]);
         
         glEnableVertexAttribArray(vertexHandle);
         glEnableVertexAttribArray(normalHandle);
@@ -369,26 +310,17 @@ Java_mmm_EchecsAR_ImageTargetsRenderer_renderFrame(JNIEnv *, jobject)
         glUniform1i(texSampler2DHandle, 0 /*GL_TEXTURE0*/);
         glUniformMatrix4fv(mvpMatrixHandle, 1, GL_FALSE,
                            (GLfloat*)&modelViewProjection.data[0] );
-        glDrawElements(GL_TRIANGLES, NUM_TEAPOT_OBJECT_INDEX, GL_UNSIGNED_SHORT,
-                       (const GLvoid*) &teapotIndices[0]);
+        glDrawElements(GL_TRIANGLES, NUM_OBJECT_INDEX, GL_UNSIGNED_SHORT,
+                       (const GLvoid*) &objectIndices[0]);
 
         glDisableVertexAttribArray(vertexHandle);
         glDisableVertexAttribArray(normalHandle);
         glDisableVertexAttribArray(textureCoordHandle);
 
         SampleUtils::checkGlError("ImageTargets renderFrame");
-#endif
-
     }
 
     glDisable(GL_DEPTH_TEST);
-
-#ifdef USE_OPENGL_ES_1_1        
-    glDisable(GL_TEXTURE_2D);
-    glDisableClientState(GL_VERTEX_ARRAY);
-    glDisableClientState(GL_NORMAL_ARRAY);
-    glDisableClientState(GL_TEXTURE_COORD_ARRAY);
-#endif
 
     QCAR::Renderer::getInstance().end();
 }
@@ -664,7 +596,6 @@ Java_mmm_EchecsAR_ImageTargetsRenderer_initRendering(
                 textures[i]->mHeight, 0, GL_RGBA, GL_UNSIGNED_BYTE,
                 (GLvoid*)  textures[i]->mData);
     }
-#ifndef USE_OPENGL_ES_1_1
   
     shaderProgramID     = SampleUtils::createProgramFromBuffer(cubeMeshVertexShader,
                                                             cubeFragmentShader);
@@ -680,8 +611,6 @@ Java_mmm_EchecsAR_ImageTargetsRenderer_initRendering(
     texSampler2DHandle  = glGetUniformLocation(shaderProgramID, 
                                                 "texSampler2D");
                                                 
-#endif
-
 }
 
 

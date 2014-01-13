@@ -1,14 +1,3 @@
-/*==============================================================================
-Copyright (c) 2010-2013 QUALCOMM Austria Research Center GmbH.
-All Rights Reserved.
-
-@file
-    AboutScreen.java
-
-@brief
-    About Screen Activity for the ImageTargets sample application
-
-==============================================================================*/
 
 package mmm.EchecsAR;
 
