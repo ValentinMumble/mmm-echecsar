@@ -42,7 +42,7 @@
 extern "C" {
 #endif
 
-#define SQUARE_SIZE 90
+#define SQUARE_SIZE 93
 #define N 32
 
 #define LROOK 0
