@@ -1,5 +1,7 @@
+
 #include <cstdlib>
 #include <time.h>
+
 #include <jni.h>
 #include <android/log.h>
 #include <stdio.h>
@@ -29,7 +31,11 @@
 #include "Teapot.h"
 #include "chessmen/BowlAndSpoonModel.h"
 
+#include "chessmen/pawn.h"
 #include "chessmen/rook.h"
+#include "chessmen/knight.h"
+#include "chessmen/bishop.h"
+#include "chessmen/queen.h"
 #include "chessmen/king.h"
 
 #ifdef __cplusplus
@@ -37,6 +43,24 @@ extern "C" {
 #endif
 
 #define SQUARE_SIZE 90
+#define N 32
+
+#define LROOK 0
+#define LKNIGHT 1
+#define LBISHOP 2
+#define QUEEN 3
+#define KING 4
+#define RBISHOP 5
+#define RKNIGHT 6
+#define RROOK 7
+#define PAWN1 8
+#define PAWN2 9
+#define PAWN3 10
+#define PAWN4 11
+#define PAWN5 12
+#define PAWN6 13
+#define PAWN7 14
+#define PAWN8 15
 
 // Textures:
 int textureCount = 0;
@@ -75,6 +99,9 @@ struct point {
 	float y;
 	float z;
 };
+
+struct point wPiecesCoords[N / 2];
+struct point bPiecesCoords[N / 2];
 
 void drawPiece(int, struct point *, float, float *, float *, float *, int, int);
 
@@ -234,6 +261,34 @@ Java_mmm_EchecsAR_ImageTargets_onQCARInitializedNative(JNIEnv *, jobject)
 	// Register the update callback where we handle the data set swap:
 	QCAR::registerCallback(&updateCallback);
 
+	// initialisation des positions
+	int x = -SQUARE_SIZE * 4 + SQUARE_SIZE / 2;
+	int y = SQUARE_SIZE * 4 - SQUARE_SIZE / 2;
+	int z = 0;
+	for (int i = 0; i < N / 4; i++) {
+		wPiecesCoords[i].x = x;
+		wPiecesCoords[i].y = y;
+		wPiecesCoords[i].z = z;
+
+		bPiecesCoords[i].x = x;
+		bPiecesCoords[i].y = -y;
+		bPiecesCoords[i].z = z;
+		x += SQUARE_SIZE;
+	}
+
+	x = -SQUARE_SIZE * 4 + SQUARE_SIZE / 2;
+	y = SQUARE_SIZE * 3 - SQUARE_SIZE / 2;
+	for (int i = 8; i < N / 2; i++) {
+		wPiecesCoords[i].x = x;
+		wPiecesCoords[i].y = y;
+		wPiecesCoords[i].z = z;
+
+		bPiecesCoords[i].x = x;
+		bPiecesCoords[i].y = -y;
+		bPiecesCoords[i].z = z;
+		x += SQUARE_SIZE;
+	}
+
 	// Comment in to enable tracking of up to 2 targets simultaneously and
 	// split the work over multiple frames:
 	// QCAR::setHint(QCAR::HINT_MAX_SIMULTANEOUS_IMAGE_TARGETS, 2);
@@ -265,11 +320,6 @@ Java_mmm_EchecsAR_ImageTargetsRenderer_renderFrame(JNIEnv *, jobject)
 	else
 	glFrontFace(GL_CCW);//Back camera
 
-	struct point wlrook;
-	wlrook.x = -360.0f + SQUARE_SIZE / 2;
-	wlrook.y = 360.0f - SQUARE_SIZE / 2;
-	wlrook.z = 0.0f;
-
 	// Did we find any trackables this frame?
 	for(int tIdx = 0; tIdx < state.getNumTrackableResults(); tIdx++)
 	{
@@ -278,13 +328,37 @@ Java_mmm_EchecsAR_ImageTargetsRenderer_renderFrame(JNIEnv *, jobject)
 		glActiveTexture(GL_TEXTURE0);
 		glUniform1i(texSampler2DHandle, 0 /*GL_TEXTURE0*/);
 
-		for (int i = -360; i < 360; i += 90) {
-			wlrook.x = i + SQUARE_SIZE / 2;
-			wlrook.y = 360 - SQUARE_SIZE / 2;
-			wlrook.z = 0.0f;
-
-			drawPiece(tIdx, &wlrook, kPieceScale, rookVertices, rookNormals, rookTexCoords, rookNumVertices, textureId);
+		// Pawns
+		for (int i = 8; i < N / 2; i++) {
+			drawPiece(tIdx, &wPiecesCoords[i], kPieceScale, pawnVertices, pawnNormals, pawnTexCoords, pawnNumVertices, textureId);
+			drawPiece(tIdx, &bPiecesCoords[i], kPieceScale, pawnVertices, pawnNormals, pawnTexCoords, pawnNumVertices, textureId);
 		}
+
+		// Rooks
+		drawPiece(tIdx, &wPiecesCoords[LROOK], kPieceScale, rookVertices, rookNormals, rookTexCoords, rookNumVertices, textureId);
+		drawPiece(tIdx, &bPiecesCoords[LROOK], kPieceScale, rookVertices, rookNormals, rookTexCoords, rookNumVertices, textureId);
+		drawPiece(tIdx, &wPiecesCoords[RROOK], kPieceScale, rookVertices, rookNormals, rookTexCoords, rookNumVertices, textureId);
+		drawPiece(tIdx, &bPiecesCoords[RROOK], kPieceScale, rookVertices, rookNormals, rookTexCoords, rookNumVertices, textureId);
+
+		// Knights
+		drawPiece(tIdx, &wPiecesCoords[LKNIGHT], kPieceScale, knightVertices, knightNormals, knightTexCoords, knightNumVertices, textureId);
+		drawPiece(tIdx, &bPiecesCoords[LKNIGHT], kPieceScale, knightVertices, knightNormals, knightTexCoords, knightNumVertices, textureId);
+		drawPiece(tIdx, &wPiecesCoords[RKNIGHT], kPieceScale, knightVertices, knightNormals, knightTexCoords, knightNumVertices, textureId);
+		drawPiece(tIdx, &bPiecesCoords[RKNIGHT], kPieceScale, knightVertices, knightNormals, knightTexCoords, knightNumVertices, textureId);
+
+		// Bishops
+		drawPiece(tIdx, &wPiecesCoords[LBISHOP], kPieceScale, bishopVertices, bishopNormals, bishopTexCoords, bishopNumVertices, textureId);
+		drawPiece(tIdx, &bPiecesCoords[LBISHOP], kPieceScale, bishopVertices, bishopNormals, bishopTexCoords, bishopNumVertices, textureId);
+		drawPiece(tIdx, &wPiecesCoords[RBISHOP], kPieceScale, bishopVertices, bishopNormals, bishopTexCoords, bishopNumVertices, textureId);
+		drawPiece(tIdx, &bPiecesCoords[RBISHOP], kPieceScale, bishopVertices, bishopNormals, bishopTexCoords, bishopNumVertices, textureId);
+
+		// Queens
+		drawPiece(tIdx, &wPiecesCoords[QUEEN], kPieceScale, queenVertices, queenNormals, queenTexCoords, queenNumVertices, textureId);
+		drawPiece(tIdx, &bPiecesCoords[QUEEN], kPieceScale, queenVertices, queenNormals, queenTexCoords, queenNumVertices, textureId);
+
+		// Kings
+		drawPiece(tIdx, &wPiecesCoords[KING], kPieceScale, kingVertices, kingNormals, kingTexCoords, kingNumVertices, textureId);
+		drawPiece(tIdx, &bPiecesCoords[KING], kPieceScale, kingVertices, kingNormals, kingTexCoords, kingNumVertices, textureId);
 
 		glDisableVertexAttribArray(vertexHandle);
 		glDisableVertexAttribArray(normalHandle);
