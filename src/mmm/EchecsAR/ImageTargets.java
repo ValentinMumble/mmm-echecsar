@@ -310,7 +310,7 @@ public class ImageTargets extends Activity {
 	private void loadTextures() {
 		mTextures.add(Texture.loadTextureFromApk("TextureBowlAndSpoon.png",
 				getAssets()));
-		mTextures.add(Texture.loadTextureFromApk("TextureTeapotBrass.png",
+		mTextures.add(Texture.loadTextureFromApk("wood.jpg",
 				getAssets()));
 	}
 

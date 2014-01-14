@@ -29,9 +29,14 @@
 #include "Teapot.h"
 #include "chessmen/BowlAndSpoonModel.h"
 
+#include "chessmen/rook.h"
+#include "chessmen/king.h"
+
 #ifdef __cplusplus
 extern "C" {
 #endif
+
+#define SQUARE_SIZE 90
 
 // Textures:
 int textureCount = 0;
@@ -58,10 +63,20 @@ QCAR::Matrix44F projectionMatrix;
 // Constants:
 static const float kBowlScale = 18.0f;
 static const float kTeapotScale = 3.0f;
+static const float kPieceScale = 60.0f;
 
 QCAR::DataSet* dataSetCheckerboard = 0;
+QCAR::State state;
 
 bool switchDataSetAsap = false;
+
+struct point {
+	float x;
+	float y;
+	float z;
+};
+
+void drawPiece(int, struct point *, float, float *, float *, float *, int, int);
 
 // Object to receive update callbacks from QCAR SDK
 class ImageTargets_UpdateCallback: public QCAR::UpdateCallback {
@@ -233,7 +248,7 @@ Java_mmm_EchecsAR_ImageTargetsRenderer_renderFrame(JNIEnv *, jobject)
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 	// Get the state from QCAR and mark the beginning of a rendering section
-	QCAR::State state = QCAR::Renderer::getInstance().begin();
+	state = QCAR::Renderer::getInstance().begin();
 
 	// Explicitly render the Video Background
 	QCAR::Renderer::getInstance().drawVideoBackground();
@@ -250,73 +265,26 @@ Java_mmm_EchecsAR_ImageTargetsRenderer_renderFrame(JNIEnv *, jobject)
 	else
 	glFrontFace(GL_CCW);//Back camera
 
+	struct point wlrook;
+	wlrook.x = -360.0f + SQUARE_SIZE / 2;
+	wlrook.y = 360.0f - SQUARE_SIZE / 2;
+	wlrook.z = 0.0f;
+
 	// Did we find any trackables this frame?
 	for(int tIdx = 0; tIdx < state.getNumTrackableResults(); tIdx++)
 	{
-		// Get the trackable:
-		const QCAR::TrackableResult* result = state.getTrackableResult(tIdx);
-		const QCAR::Trackable& trackable = result->getTrackable();
-		QCAR::Matrix44F modelViewMatrix =
-		QCAR::Tool::convertPose2GLMatrix(result->getPose());
-
-		QCAR::Matrix44F modelViewProjection;
-
+		int textureId = 1;
 		glUseProgram(shaderProgramID);
 		glActiveTexture(GL_TEXTURE0);
 		glUniform1i(texSampler2DHandle, 0 /*GL_TEXTURE0*/);
 
-		// Draw the teapot
-		modelViewMatrix = QCAR::Tool::convertPose2GLMatrix(result->getPose());
+		for (int i = -360; i < 360; i += 90) {
+			wlrook.x = i + SQUARE_SIZE / 2;
+			wlrook.y = 360 - SQUARE_SIZE / 2;
+			wlrook.z = 0.0f;
 
-		SampleUtils::translatePoseMatrix(0.0f, 0.0f, 0.0f,
-				&modelViewMatrix.data[0]);
-		SampleUtils::scalePoseMatrix(kTeapotScale, kTeapotScale, kTeapotScale,
-				&modelViewMatrix.data[0]);
-		SampleUtils::multiplyMatrix(&projectionMatrix.data[0],
-				&modelViewMatrix.data[0] ,
-				&modelViewProjection.data[0]);
-
-		glVertexAttribPointer(vertexHandle, 3, GL_FLOAT, GL_FALSE, 0,
-				(const GLvoid*) &teapotVertices[0]);
-		glVertexAttribPointer(normalHandle, 3, GL_FLOAT, GL_FALSE, 0,
-				(const GLvoid*) &teapotNormals[0]);
-		glVertexAttribPointer(textureCoordHandle, 2, GL_FLOAT, GL_FALSE, 0,
-				(const GLvoid*) &teapotTexCoords[0]);
-		glEnableVertexAttribArray(vertexHandle);
-		glEnableVertexAttribArray(normalHandle);
-		glEnableVertexAttribArray(textureCoordHandle);
-
-		glBindTexture(GL_TEXTURE_2D, textures[1]->mTextureID);
-		glUniformMatrix4fv(mvpMatrixHandle, 1, GL_FALSE,
-				(GLfloat*)&modelViewProjection.data[0] );
-		glDrawElements(GL_TRIANGLES, NUM_TEAPOT_OBJECT_INDEX, GL_UNSIGNED_SHORT,
-				(const GLvoid*) &teapotIndices[0]);
-
-		// Draw the bowl
-		modelViewMatrix = QCAR::Tool::convertPose2GLMatrix(result->getPose());
-		SampleUtils::translatePoseMatrix(0.0f, 0.0f, 0.0f,
-				&modelViewMatrix.data[0]);
-		SampleUtils::scalePoseMatrix(kBowlScale, kBowlScale, kBowlScale,
-				&modelViewMatrix.data[0]);
-		SampleUtils::multiplyMatrix(&projectionMatrix.data[0],
-				&modelViewMatrix.data[0] ,
-				&modelViewProjection.data[0]);
-		glVertexAttribPointer(vertexHandle, 3, GL_FLOAT, GL_FALSE, 0,
-				(const GLvoid*) &objectVertices[0]);
-		glVertexAttribPointer(normalHandle, 3, GL_FLOAT, GL_FALSE, 0,
-				(const GLvoid*) &objectNormals[0]);
-		glVertexAttribPointer(textureCoordHandle, 2, GL_FLOAT, GL_FALSE, 0,
-				(const GLvoid*) &objectTexCoords[0]);
-
-		glEnableVertexAttribArray(vertexHandle);
-		glEnableVertexAttribArray(normalHandle);
-		glEnableVertexAttribArray(textureCoordHandle);
-
-		glBindTexture(GL_TEXTURE_2D, textures[0]->mTextureID);
-		glUniformMatrix4fv(mvpMatrixHandle, 1, GL_FALSE,
-				(GLfloat*)&modelViewProjection.data[0] );
-		glDrawElements(GL_TRIANGLES, NUM_OBJECT_INDEX, GL_UNSIGNED_SHORT,
-				(const GLvoid*) &objectIndices[0]);
+			drawPiece(tIdx, &wlrook, kPieceScale, rookVertices, rookNormals, rookTexCoords, rookNumVertices, textureId);
+		}
 
 		glDisableVertexAttribArray(vertexHandle);
 		glDisableVertexAttribArray(normalHandle);
@@ -328,6 +296,38 @@ Java_mmm_EchecsAR_ImageTargetsRenderer_renderFrame(JNIEnv *, jobject)
 	glDisable(GL_DEPTH_TEST);
 
 	QCAR::Renderer::getInstance().end();
+}
+
+void drawPiece(int tIdx, struct point *coord, float scale, float *vertices,
+		float *normals, float *texCoords, int numVertices, int textureId) {
+	// Get the trackable:
+	const QCAR::TrackableResult* result = state.getTrackableResult(tIdx);
+	const QCAR::Trackable& trackable = result->getTrackable();
+
+	QCAR::Matrix44F modelViewProjection;
+	QCAR::Matrix44F modelViewMatrix = QCAR::Tool::convertPose2GLMatrix(
+			result->getPose());
+
+	SampleUtils::translatePoseMatrix(coord->x, coord->y, coord->z,
+			&modelViewMatrix.data[0]);
+	SampleUtils::scalePoseMatrix(scale, scale, scale, &modelViewMatrix.data[0]);
+	SampleUtils::multiplyMatrix(&projectionMatrix.data[0],
+			&modelViewMatrix.data[0], &modelViewProjection.data[0]);
+
+	glVertexAttribPointer(vertexHandle, 3, GL_FLOAT, GL_FALSE, 0,
+			(const GLvoid*) &vertices[0]);
+	glVertexAttribPointer(normalHandle, 3, GL_FLOAT, GL_FALSE, 0,
+			(const GLvoid*) &normals[0]);
+	glVertexAttribPointer(textureCoordHandle, 2, GL_FLOAT, GL_FALSE, 0,
+			(const GLvoid*) &texCoords[0]);
+	glEnableVertexAttribArray(vertexHandle);
+	glEnableVertexAttribArray(normalHandle);
+	glEnableVertexAttribArray(textureCoordHandle);
+
+	glBindTexture(GL_TEXTURE_2D, textures[textureId]->mTextureID);
+	glUniformMatrix4fv(mvpMatrixHandle, 1, GL_FALSE,
+			(GLfloat*) &modelViewProjection.data[0]);
+	glDrawArrays(GL_TRIANGLES, 0, numVertices);
 }
 
 void configureVideoBackground() {

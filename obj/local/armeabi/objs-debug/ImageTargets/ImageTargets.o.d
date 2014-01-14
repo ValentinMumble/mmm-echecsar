@@ -51,7 +51,8 @@ obj/local/armeabi/objs-debug/ImageTargets/ImageTargets.o: \
  jni/../build/include/QCAR/ImageTracker.h \
  jni/../build/include/QCAR/UpdateCallback.h \
  jni/../build/include/QCAR/DataSet.h jni/SampleUtils.h jni/Texture.h \
- jni/CubeShaders.h jni/Teapot.h jni/chessmen/BowlAndSpoonModel.h
+ jni/CubeShaders.h jni/Teapot.h jni/chessmen/BowlAndSpoonModel.h \
+ jni/chessmen/rook.h jni/chessmen/king.h
 
 /Users/valentinmumble/Development/android-ndk-r9b/sources/cxx-stl/system/include/cstdlib:
 
@@ -172,3 +173,7 @@ jni/CubeShaders.h:
 jni/Teapot.h:
 
 jni/chessmen/BowlAndSpoonModel.h:
+
+jni/chessmen/rook.h:
+
+jni/chessmen/king.h:
