@@ -62,6 +62,11 @@ extern "C" {
 #define MAX_TAP_TIMER 200
 #define MAX_TAP_DISTANCE2 400
 
+float* vertices[N / 4] = {rookVertices, knightVertices, bishopVertices, queenVertices, kingVertices, bishopVertices, knightVertices, rookVertices};
+float* normals[N / 4] = {rookNormals, knightNormals, bishopNormals, queenNormals, kingNormals, bishopNormals, knightNormals, rookNormals};
+float* texCoords[N / 4] = {rookTexCoords, knightTexCoords, bishopTexCoords, queenTexCoords, kingTexCoords, bishopTexCoords, knightTexCoords, rookTexCoords};
+int numVertices[N / 4] = {rookNumVertices, knightNumVertices, bishopNumVertices, queenNumVertices, kingNumVertices, bishopNumVertices, knightNumVertices, rookNumVertices};
+
 // Textures:
 int textureCount = 0;
 Texture** textures = 0;

@@ -8,9 +8,9 @@ class ImageTargets_UpdateCallback: public QCAR::UpdateCallback {
 
 			// Get the image tracker:
 			QCAR::TrackerManager& trackerManager =
-					QCAR::TrackerManager::getInstance();
+			QCAR::TrackerManager::getInstance();
 			QCAR::ImageTracker* imageTracker =
-					static_cast<QCAR::ImageTracker*>(trackerManager.getTracker(
+			static_cast<QCAR::ImageTracker*>(trackerManager.getTracker(
 							QCAR::Tracker::IMAGE_TRACKER));
 			if (imageTracker == 0 || dataSetCheckerboard == 0
 					|| imageTracker->getActiveDataSet() == 0) {
@@ -158,9 +158,24 @@ Java_mmm_EchecsAR_ImageTargets_onQCARInitializedNative(JNIEnv *, jobject)
 
 	// initialisation des positions
 
-	// initialisation des x et y a la case superieur gauche
+	// initialisation des x et y a la case superieure gauche
 	int x = -SQUARE_SIZE * 4 + SQUARE_SIZE / 2;
 	int y = SQUARE_SIZE * 4 - SQUARE_SIZE / 2;
+
+	for (int i = 0; i < N / 4; i++) {
+		wPieces[i].position.data[0] = x;
+		wPieces[i].position.data[1] = y;
+		bPieces[i].position.data[0] = x;
+		bPieces[i].position.data[1] = -y;
+
+		wPieces[i].vertices = bPieces[i].vertices = vertices[i];
+		wPieces[i].normals = bPieces[i].normals = normals[i];
+		wPieces[i].texCoords = bPieces[i].texCoords = texCoords[i];
+		wPieces[i].numVertices = bPieces[i].numVertices = numVertices[i];
+		wPieces[i].textureId = bPieces[i].textureId = 0;
+
+		x += SQUARE_SIZE;
+	}
 
 	// Pawns
 	x = -SQUARE_SIZE * 4 + SQUARE_SIZE / 2;
@@ -168,19 +183,14 @@ Java_mmm_EchecsAR_ImageTargets_onQCARInitializedNative(JNIEnv *, jobject)
 	for (int i = 8; i < N / 2; i++) {
 		wPieces[i].position.data[0] = x;
 		wPieces[i].position.data[1] = y;
-		wPieces[i].vertices = pawnVertices;
-		wPieces[i].normals = pawnNormals;
-		wPieces[i].texCoords = pawnTexCoords;
-		wPieces[i].numVertices = pawnNumVertices;
-		wPieces[i].textureId = 0;
-
 		bPieces[i].position.data[0] = x;
 		bPieces[i].position.data[1] = -y;
-		bPieces[i].vertices = pawnVertices;
-		bPieces[i].normals = pawnNormals;
-		bPieces[i].texCoords = pawnTexCoords;
-		bPieces[i].numVertices = pawnNumVertices;
-		bPieces[i].textureId = 0;
+
+		wPieces[i].vertices = bPieces[i].vertices = pawnVertices;
+		wPieces[i].normals = bPieces[i].normals = pawnNormals;
+		wPieces[i].texCoords = bPieces[i].texCoords = pawnTexCoords;
+		wPieces[i].numVertices = bPieces[i].numVertices = pawnNumVertices;
+		wPieces[i].textureId = bPieces[i].textureId = 0;
 
 		x += SQUARE_SIZE;
 	}
@@ -274,63 +284,63 @@ void drawPiece(int tIdx, Piece *piece, float scale) {
 JNIEXPORT void JNICALL
 Java_mmm_EchecsAR_ImageTargets_nativeTouchEvent(JNIEnv* , jobject, jint actionType, jint pointerId, jfloat x, jfloat y)
 {
-    TouchEvent* touchEvent;
+	TouchEvent* touchEvent;
 
-    // Determine which finger this event represents
-    if (pointerId == 0) {
-        touchEvent = &touch1;
-    } else if (pointerId == 1) {
-        touchEvent = &touch2;
-    } else {
-        return;
-    }
+	// Determine which finger this event represents
+	if (pointerId == 0) {
+		touchEvent = &touch1;
+	} else if (pointerId == 1) {
+		touchEvent = &touch2;
+	} else {
+		return;
+	}
 
-    if (actionType == ACTION_DOWN) {
-        // On touch down, reset the following:
-        touchEvent->lastX = x;
-        touchEvent->lastY = y;
-        touchEvent->startX = x;
-        touchEvent->startY = y;
-        touchEvent->startTime = getCurrentTimeMS();
-        touchEvent->didTap = false;
-    } else {
-        // Store the last event's position
-        touchEvent->lastX = touchEvent->x;
-        touchEvent->lastY = touchEvent->y;
-    }
+	if (actionType == ACTION_DOWN) {
+		// On touch down, reset the following:
+		touchEvent->lastX = x;
+		touchEvent->lastY = y;
+		touchEvent->startX = x;
+		touchEvent->startY = y;
+		touchEvent->startTime = getCurrentTimeMS();
+		touchEvent->didTap = false;
+	} else {
+		// Store the last event's position
+		touchEvent->lastX = touchEvent->x;
+		touchEvent->lastY = touchEvent->y;
+	}
 
-    // Store the lifetime of the touch, used for tap recognition
-    unsigned long time = getCurrentTimeMS();
-    touchEvent->dt = time - touchEvent->startTime;
+	// Store the lifetime of the touch, used for tap recognition
+	unsigned long time = getCurrentTimeMS();
+	touchEvent->dt = time - touchEvent->startTime;
 
-    // Store the distance squared from the initial point, for tap recognition
-    float dx = touchEvent->lastX - touchEvent->startX;
-    float dy = touchEvent->lastY - touchEvent->startY;
-    touchEvent->dist2 = dx * dx + dy * dy;
+	// Store the distance squared from the initial point, for tap recognition
+	float dx = touchEvent->lastX - touchEvent->startX;
+	float dy = touchEvent->lastY - touchEvent->startY;
+	touchEvent->dist2 = dx * dx + dy * dy;
 
-    if (actionType == ACTION_UP) {
-        // On touch up, this touch is no longer active
-        touchEvent->isActive = false;
+	if (actionType == ACTION_UP) {
+		// On touch up, this touch is no longer active
+		touchEvent->isActive = false;
 
-        // Determine if this touch up ends a tap gesture
-        // The tap must be quick and localized
-        if (touchEvent->dt < MAX_TAP_TIMER && touchEvent->dist2 < MAX_TAP_DISTANCE2) {
-            touchEvent->didTap = true;
-            touchEvent->tapX = touchEvent->startX;
-            touchEvent->tapY = touchEvent->startY;
-        }
-    } else {
-        // On touch down or move, this touch is active
-        touchEvent->isActive = true;
-    }
+		// Determine if this touch up ends a tap gesture
+		// The tap must be quick and localized
+		if (touchEvent->dt < MAX_TAP_TIMER && touchEvent->dist2 < MAX_TAP_DISTANCE2) {
+			touchEvent->didTap = true;
+			touchEvent->tapX = touchEvent->startX;
+			touchEvent->tapY = touchEvent->startY;
+		}
+	} else {
+		// On touch down or move, this touch is active
+		touchEvent->isActive = true;
+	}
 
-    // Set the touch information for this event
-    touchEvent->actionType = actionType;
-    touchEvent->pointerId = pointerId;
-    touchEvent->x = x;
-    touchEvent->y = y;
-    LOG("x: %f", x);
-    LOG("y: %f", y);
+	// Set the touch information for this event
+	touchEvent->actionType = actionType;
+	touchEvent->pointerId = pointerId;
+	touchEvent->x = x;
+	touchEvent->y = y;
+	LOG("x: %f", x);
+	LOG("y: %f", y);
 }
 
 // ----------------------------------------------------------------------------
@@ -338,11 +348,11 @@ Java_mmm_EchecsAR_ImageTargets_nativeTouchEvent(JNIEnv* , jobject, jint actionTy
 // ----------------------------------------------------------------------------
 
 unsigned long getCurrentTimeMS() {
-    struct timeval tv;
-    gettimeofday(&tv, NULL);
-    unsigned long s = tv.tv_sec * 1000;
-    unsigned long us = tv.tv_usec / 1000;
-    return s + us;
+	struct timeval tv;
+	gettimeofday(&tv, NULL);
+	unsigned long s = tv.tv_sec * 1000;
+	unsigned long us = tv.tv_usec / 1000;
+	return s + us;
 }
 
 void configureVideoBackground() {
@@ -361,7 +371,7 @@ void configureVideoBackground() {
 	if (isActivityInPortraitMode) {
 		//LOG("configureVideoBackground PORTRAIT");
 		config.mSize.data[0] = videoMode.mHeight
-				* (screenHeight / (float) videoMode.mWidth);
+		* (screenHeight / (float) videoMode.mWidth);
 		config.mSize.data[1] = screenHeight;
 
 		if (config.mSize.data[0] < screenWidth) {
@@ -369,19 +379,19 @@ void configureVideoBackground() {
 					"Correcting rendering background size to handle missmatch between screen and video aspect ratios.");
 			config.mSize.data[0] = screenWidth;
 			config.mSize.data[1] = screenWidth
-					* (videoMode.mWidth / (float) videoMode.mHeight);
+			* (videoMode.mWidth / (float) videoMode.mHeight);
 		}
 	} else {
 		//LOG("configureVideoBackground LANDSCAPE");
 		config.mSize.data[0] = screenWidth;
 		config.mSize.data[1] = videoMode.mHeight
-				* (screenWidth / (float) videoMode.mWidth);
+		* (screenWidth / (float) videoMode.mWidth);
 
 		if (config.mSize.data[1] < screenHeight) {
 			LOG(
 					"Correcting rendering background size to handle missmatch between screen and video aspect ratios.");
 			config.mSize.data[0] = screenHeight
-					* (videoMode.mWidth / (float) videoMode.mHeight);
+			* (videoMode.mWidth / (float) videoMode.mHeight);
 			config.mSize.data[1] = screenHeight;
 		}
 	}
