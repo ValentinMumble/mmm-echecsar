@@ -321,8 +321,7 @@ Java_mmm_EchecsAR_ImageTargetsRenderer_renderFrame(JNIEnv *, jobject)
 	glFrontFace(GL_CCW);//Back camera
 
 	// Did we find any trackables this frame?
-	for(int tIdx = 0; tIdx < state.getNumTrackableResults(); tIdx++)
-	{
+	for(int tIdx = 0; tIdx < state.getNumTrackableResults(); tIdx++) {
 		int textureId = 1;
 		glUseProgram(shaderProgramID);
 		glActiveTexture(GL_TEXTURE0);
