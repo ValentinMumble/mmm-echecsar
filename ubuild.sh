@@ -1,3 +1,4 @@
 #!/bin/bash
-rm -rf obj/local
+rm -rf obj/*
+rm -rf libs/*
 ndk-build

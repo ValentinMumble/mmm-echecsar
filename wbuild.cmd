@@ -1,2 +1,3 @@
-rmdir obj\local /s /q
+rmdir obj\* /s /q
+rmdir libs\*
 ndk-build
