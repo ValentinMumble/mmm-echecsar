@@ -128,6 +128,27 @@ typedef struct _TouchEvent {
 
 TouchEvent touch1, touch2;
 
-void drawPiece(int, struct point *, float, float *, float *, float *, int, int);
+typedef struct _Piece {
+    int id;
+    int state;
+
+    QCAR::Vec2F position;
+    QCAR::Matrix44F transform;
+    QCAR::Matrix44F pickingTransform;
+    float *vertices;
+    float *normals;
+    float *texCoords;
+    int numVertices;
+    int textureId;
+
+    int restingFrameCount;
+} Piece;
+
+Piece wPieces[N / 2];
+Piece bPieces[N / 2];
+
+Piece* selectedPiece;
+
+void drawPiece(int, Piece *, float);
 
 unsigned long getCurrentTimeMS();

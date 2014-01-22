@@ -157,30 +157,31 @@ Java_mmm_EchecsAR_ImageTargets_onQCARInitializedNative(JNIEnv *, jobject)
 	QCAR::registerCallback(&updateCallback);
 
 	// initialisation des positions
+
+	// initialisation des x et y a la case superieur gauche
 	int x = -SQUARE_SIZE * 4 + SQUARE_SIZE / 2;
 	int y = SQUARE_SIZE * 4 - SQUARE_SIZE / 2;
-	int z = 0;
-	for (int i = 0; i < N / 4; i++) {
-		wPiecesCoords[i].x = x;
-		wPiecesCoords[i].y = y;
-		wPiecesCoords[i].z = z;
 
-		bPiecesCoords[i].x = x;
-		bPiecesCoords[i].y = -y;
-		bPiecesCoords[i].z = z;
-		x += SQUARE_SIZE;
-	}
-
+	// Pawns
 	x = -SQUARE_SIZE * 4 + SQUARE_SIZE / 2;
 	y = SQUARE_SIZE * 3 - SQUARE_SIZE / 2;
 	for (int i = 8; i < N / 2; i++) {
-		wPiecesCoords[i].x = x;
-		wPiecesCoords[i].y = y;
-		wPiecesCoords[i].z = z;
+		wPieces[i].position.data[0] = x;
+		wPieces[i].position.data[1] = y;
+		wPieces[i].vertices = pawnVertices;
+		wPieces[i].normals = pawnNormals;
+		wPieces[i].texCoords = pawnTexCoords;
+		wPieces[i].numVertices = pawnNumVertices;
+		wPieces[i].textureId = 0;
 
-		bPiecesCoords[i].x = x;
-		bPiecesCoords[i].y = -y;
-		bPiecesCoords[i].z = z;
+		bPieces[i].position.data[0] = x;
+		bPieces[i].position.data[1] = -y;
+		bPieces[i].vertices = pawnVertices;
+		bPieces[i].normals = pawnNormals;
+		bPieces[i].texCoords = pawnTexCoords;
+		bPieces[i].numVertices = pawnNumVertices;
+		bPieces[i].textureId = 0;
+
 		x += SQUARE_SIZE;
 	}
 
@@ -222,37 +223,10 @@ Java_mmm_EchecsAR_ImageTargetsRenderer_renderFrame(JNIEnv *, jobject)
 		glActiveTexture(GL_TEXTURE0);
 		glUniform1i(texSampler2DHandle, 0 /*GL_TEXTURE0*/);
 
-		// Pawns
-		for (int i = 8; i < N / 2; i++) {
-			drawPiece(tIdx, &wPiecesCoords[i], kPieceScale, pawnVertices, pawnNormals, pawnTexCoords, pawnNumVertices, textureId);
-			drawPiece(tIdx, &bPiecesCoords[i], kPieceScale, pawnVertices, pawnNormals, pawnTexCoords, pawnNumVertices, textureId);
+		for (int i = 0; i < N / 2; i++) {
+			drawPiece(tIdx, &wPieces[i], kPieceScale);
+			drawPiece(tIdx, &bPieces[i], kPieceScale);
 		}
-
-		// Rooks
-		drawPiece(tIdx, &wPiecesCoords[LROOK], kPieceScale, rookVertices, rookNormals, rookTexCoords, rookNumVertices, textureId);
-		drawPiece(tIdx, &bPiecesCoords[LROOK], kPieceScale, rookVertices, rookNormals, rookTexCoords, rookNumVertices, textureId);
-		drawPiece(tIdx, &wPiecesCoords[RROOK], kPieceScale, rookVertices, rookNormals, rookTexCoords, rookNumVertices, textureId);
-		drawPiece(tIdx, &bPiecesCoords[RROOK], kPieceScale, rookVertices, rookNormals, rookTexCoords, rookNumVertices, textureId);
-
-		// Knights
-		drawPiece(tIdx, &wPiecesCoords[LKNIGHT], kPieceScale, knightVertices, knightNormals, knightTexCoords, knightNumVertices, textureId);
-		drawPiece(tIdx, &bPiecesCoords[LKNIGHT], kPieceScale, knightVertices, knightNormals, knightTexCoords, knightNumVertices, textureId);
-		drawPiece(tIdx, &wPiecesCoords[RKNIGHT], kPieceScale, knightVertices, knightNormals, knightTexCoords, knightNumVertices, textureId);
-		drawPiece(tIdx, &bPiecesCoords[RKNIGHT], kPieceScale, knightVertices, knightNormals, knightTexCoords, knightNumVertices, textureId);
-
-		// Bishops
-		drawPiece(tIdx, &wPiecesCoords[LBISHOP], kPieceScale, bishopVertices, bishopNormals, bishopTexCoords, bishopNumVertices, textureId);
-		drawPiece(tIdx, &bPiecesCoords[LBISHOP], kPieceScale, bishopVertices, bishopNormals, bishopTexCoords, bishopNumVertices, textureId);
-		drawPiece(tIdx, &wPiecesCoords[RBISHOP], kPieceScale, bishopVertices, bishopNormals, bishopTexCoords, bishopNumVertices, textureId);
-		drawPiece(tIdx, &bPiecesCoords[RBISHOP], kPieceScale, bishopVertices, bishopNormals, bishopTexCoords, bishopNumVertices, textureId);
-
-		// Queens
-		drawPiece(tIdx, &wPiecesCoords[QUEEN], kPieceScale, queenVertices, queenNormals, queenTexCoords, queenNumVertices, textureId);
-		drawPiece(tIdx, &bPiecesCoords[QUEEN], kPieceScale, queenVertices, queenNormals, queenTexCoords, queenNumVertices, textureId);
-
-		// Kings
-		drawPiece(tIdx, &wPiecesCoords[KING], kPieceScale, kingVertices, kingNormals, kingTexCoords, kingNumVertices, textureId);
-		drawPiece(tIdx, &bPiecesCoords[KING], kPieceScale, kingVertices, kingNormals, kingTexCoords, kingNumVertices, textureId);
 
 		glDisableVertexAttribArray(vertexHandle);
 		glDisableVertexAttribArray(normalHandle);
@@ -266,8 +240,7 @@ Java_mmm_EchecsAR_ImageTargetsRenderer_renderFrame(JNIEnv *, jobject)
 	QCAR::Renderer::getInstance().end();
 }
 
-void drawPiece(int tIdx, struct point *coord, float scale, float *vertices,
-		float *normals, float *texCoords, int numVertices, int textureId) {
+void drawPiece(int tIdx, Piece *piece, float scale) {
 	// Get the trackable:
 	const QCAR::TrackableResult* result = state.getTrackableResult(tIdx);
 	const QCAR::Trackable& trackable = result->getTrackable();
@@ -276,26 +249,26 @@ void drawPiece(int tIdx, struct point *coord, float scale, float *vertices,
 	QCAR::Matrix44F modelViewMatrix = QCAR::Tool::convertPose2GLMatrix(
 			result->getPose());
 
-	SampleUtils::translatePoseMatrix(coord->x, coord->y, coord->z,
+	SampleUtils::translatePoseMatrix(piece->position.data[0], piece->position.data[1], 0,
 			&modelViewMatrix.data[0]);
 	SampleUtils::scalePoseMatrix(scale, scale, scale, &modelViewMatrix.data[0]);
 	SampleUtils::multiplyMatrix(&projectionMatrix.data[0],
 			&modelViewMatrix.data[0], &modelViewProjection.data[0]);
 
 	glVertexAttribPointer(vertexHandle, 3, GL_FLOAT, GL_FALSE, 0,
-			(const GLvoid*) &vertices[0]);
+			(const GLvoid*) &piece->vertices[0]);
 	glVertexAttribPointer(normalHandle, 3, GL_FLOAT, GL_FALSE, 0,
-			(const GLvoid*) &normals[0]);
+			(const GLvoid*) &piece->normals[0]);
 	glVertexAttribPointer(textureCoordHandle, 2, GL_FLOAT, GL_FALSE, 0,
-			(const GLvoid*) &texCoords[0]);
+			(const GLvoid*) &piece->texCoords[0]);
 	glEnableVertexAttribArray(vertexHandle);
 	glEnableVertexAttribArray(normalHandle);
 	glEnableVertexAttribArray(textureCoordHandle);
 
-	glBindTexture(GL_TEXTURE_2D, textures[textureId]->mTextureID);
+	glBindTexture(GL_TEXTURE_2D, textures[piece->textureId]->mTextureID);
 	glUniformMatrix4fv(mvpMatrixHandle, 1, GL_FALSE,
 			(GLfloat*) &modelViewProjection.data[0]);
-	glDrawArrays(GL_TRIANGLES, 0, numVertices);
+	glDrawArrays(GL_TRIANGLES, 0, piece->numVertices);
 }
 
 JNIEXPORT void JNICALL
