@@ -1,105 +1,4 @@
-
-#include <cstdlib>
-#include <time.h>
-
-#include <jni.h>
-#include <android/log.h>
-#include <stdio.h>
-#include <string.h>
-#include <assert.h>
-
-#include <GLES2/gl2.h>
-#include <GLES2/gl2ext.h>
-
-#include <QCAR/QCAR.h>
-#include <QCAR/CameraDevice.h>
-#include <QCAR/Renderer.h>
-#include <QCAR/VideoBackgroundConfig.h>
-#include <QCAR/Trackable.h>
-#include <QCAR/TrackableResult.h>
-#include <QCAR/Tool.h>
-#include <QCAR/Tracker.h>
-#include <QCAR/TrackerManager.h>
-#include <QCAR/ImageTracker.h>
-#include <QCAR/CameraCalibration.h>
-#include <QCAR/UpdateCallback.h>
-#include <QCAR/DataSet.h>
-
-#include "SampleUtils.h"
-#include "Texture.h"
-#include "CubeShaders.h"
-
-#include "chessmen/pawn.h"
-#include "chessmen/rook.h"
-#include "chessmen/knight.h"
-#include "chessmen/bishop.h"
-#include "chessmen/queen.h"
-#include "chessmen/king.h"
-
-#ifdef __cplusplus
-extern "C" {
-#endif
-
-#define SQUARE_SIZE 93
-#define N 32
-
-#define LROOK 0
-#define LKNIGHT 1
-#define LBISHOP 2
-#define QUEEN 3
-#define KING 4
-#define RBISHOP 5
-#define RKNIGHT 6
-#define RROOK 7
-#define PAWN1 8
-#define PAWN2 9
-#define PAWN3 10
-#define PAWN4 11
-#define PAWN5 12
-#define PAWN6 13
-#define PAWN7 14
-#define PAWN8 15
-
-// Textures:
-int textureCount = 0;
-Texture** textures = 0;
-
-// OpenGL ES 2.0 specific:
-unsigned int shaderProgramID = 0;
-GLint vertexHandle = 0;
-GLint normalHandle = 0;
-GLint textureCoordHandle = 0;
-GLint mvpMatrixHandle = 0;
-GLint texSampler2DHandle = 0;
-
-// Screen dimensions:
-unsigned int screenWidth = 0;
-unsigned int screenHeight = 0;
-
-// Indicates whether screen is in portrait (true) or landscape (false) mode
-bool isActivityInPortraitMode = false;
-
-// The projection matrix used for rendering virtual objects:
-QCAR::Matrix44F projectionMatrix;
-
-// Constants:
-static const float kPieceScale = 60.0f;
-
-QCAR::DataSet* dataSetCheckerboard = 0;
-QCAR::State state;
-
-bool switchDataSetAsap = false;
-
-struct point {
-	float x;
-	float y;
-	float z;
-};
-
-struct point wPiecesCoords[N / 2];
-struct point bPiecesCoords[N / 2];
-
-void drawPiece(int, struct point *, float, float *, float *, float *, int, int);
+#include "ImageTargets.h"
 
 // Object to receive update callbacks from QCAR SDK
 class ImageTargets_UpdateCallback: public QCAR::UpdateCallback {
@@ -397,6 +296,80 @@ void drawPiece(int tIdx, struct point *coord, float scale, float *vertices,
 	glUniformMatrix4fv(mvpMatrixHandle, 1, GL_FALSE,
 			(GLfloat*) &modelViewProjection.data[0]);
 	glDrawArrays(GL_TRIANGLES, 0, numVertices);
+}
+
+JNIEXPORT void JNICALL
+Java_mmm_EchecsAR_ImageTargets_nativeTouchEvent(JNIEnv* , jobject, jint actionType, jint pointerId, jfloat x, jfloat y)
+{
+    TouchEvent* touchEvent;
+
+    // Determine which finger this event represents
+    if (pointerId == 0) {
+        touchEvent = &touch1;
+    } else if (pointerId == 1) {
+        touchEvent = &touch2;
+    } else {
+        return;
+    }
+
+    if (actionType == ACTION_DOWN) {
+        // On touch down, reset the following:
+        touchEvent->lastX = x;
+        touchEvent->lastY = y;
+        touchEvent->startX = x;
+        touchEvent->startY = y;
+        touchEvent->startTime = getCurrentTimeMS();
+        touchEvent->didTap = false;
+    } else {
+        // Store the last event's position
+        touchEvent->lastX = touchEvent->x;
+        touchEvent->lastY = touchEvent->y;
+    }
+
+    // Store the lifetime of the touch, used for tap recognition
+    unsigned long time = getCurrentTimeMS();
+    touchEvent->dt = time - touchEvent->startTime;
+
+    // Store the distance squared from the initial point, for tap recognition
+    float dx = touchEvent->lastX - touchEvent->startX;
+    float dy = touchEvent->lastY - touchEvent->startY;
+    touchEvent->dist2 = dx * dx + dy * dy;
+
+    if (actionType == ACTION_UP) {
+        // On touch up, this touch is no longer active
+        touchEvent->isActive = false;
+
+        // Determine if this touch up ends a tap gesture
+        // The tap must be quick and localized
+        if (touchEvent->dt < MAX_TAP_TIMER && touchEvent->dist2 < MAX_TAP_DISTANCE2) {
+            touchEvent->didTap = true;
+            touchEvent->tapX = touchEvent->startX;
+            touchEvent->tapY = touchEvent->startY;
+        }
+    } else {
+        // On touch down or move, this touch is active
+        touchEvent->isActive = true;
+    }
+
+    // Set the touch information for this event
+    touchEvent->actionType = actionType;
+    touchEvent->pointerId = pointerId;
+    touchEvent->x = x;
+    touchEvent->y = y;
+    LOG("x: %f", x);
+    LOG("y: %f", y);
+}
+
+// ----------------------------------------------------------------------------
+// Time utility
+// ----------------------------------------------------------------------------
+
+unsigned long getCurrentTimeMS() {
+    struct timeval tv;
+    gettimeofday(&tv, NULL);
+    unsigned long s = tv.tv_sec * 1000;
+    unsigned long us = tv.tv_usec / 1000;
+    return s + us;
 }
 
 void configureVideoBackground() {

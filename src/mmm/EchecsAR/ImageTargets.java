@@ -771,10 +771,71 @@ public class ImageTargets extends Activity {
 		return super.onKeyUp(keyCode, event);
 	}
 
-	public boolean onTouchEvent(MotionEvent event) {
-		// Process the Gestures
-		return mGestureDetector.onTouchEvent(event);
-	}
+	/** Native function to receive touch events. */
+    public native void nativeTouchEvent(int actionType, int pointerId,
+        float x, float y);
+
+
+    /** Send touch events to native. */
+    public boolean onTouchEvent(MotionEvent event)
+    {
+        int action = event.getAction();
+        int actionType = -1;
+        int pointerIndex = -1;
+
+        switch (action & MotionEvent.ACTION_MASK) {
+            case MotionEvent.ACTION_DOWN:
+                actionType = 0;
+                break;
+
+            case MotionEvent.ACTION_POINTER_DOWN:
+                pointerIndex =
+                    (action & MotionEvent.ACTION_POINTER_INDEX_MASK)
+                        >> MotionEvent.ACTION_POINTER_INDEX_SHIFT;
+                actionType = 0;
+                break;
+
+            case MotionEvent.ACTION_MOVE:
+                actionType = 1;
+                break;
+
+            case MotionEvent.ACTION_UP:
+                actionType = 2;
+                break;
+
+            case MotionEvent.ACTION_POINTER_UP:
+                pointerIndex =
+                    (action & MotionEvent.ACTION_POINTER_INDEX_MASK)
+                        >> MotionEvent.ACTION_POINTER_INDEX_SHIFT;
+                actionType = 2;
+                break;
+
+            case MotionEvent.ACTION_CANCEL:
+                actionType = 3;
+                break;
+        }
+
+        if (pointerIndex != -1)
+        {
+            int pointerId = event.getPointerId(pointerIndex);
+            float x = event.getX(pointerIndex);
+            float y = event.getY(pointerIndex);
+            nativeTouchEvent(actionType, pointerId, x, y);
+
+        }
+        else
+        {
+            for (int i = 0; i < event.getPointerCount(); i++)
+            {
+                int pointerId = event.getPointerId(i);
+                float x = event.getX(i);
+                float y = event.getY(i);
+                nativeTouchEvent(actionType, pointerId, x, y);
+            }
+        }
+
+        return true;
+    }
 
 	/**
 	 * Process Double Tap event for showing the Camera options menu
