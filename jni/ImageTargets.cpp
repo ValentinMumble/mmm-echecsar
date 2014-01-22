@@ -28,8 +28,6 @@
 #include "SampleUtils.h"
 #include "Texture.h"
 #include "CubeShaders.h"
-#include "Teapot.h"
-#include "chessmen/BowlAndSpoonModel.h"
 
 #include "chessmen/pawn.h"
 #include "chessmen/rook.h"
@@ -85,8 +83,6 @@ bool isActivityInPortraitMode = false;
 QCAR::Matrix44F projectionMatrix;
 
 // Constants:
-static const float kBowlScale = 18.0f;
-static const float kTeapotScale = 3.0f;
 static const float kPieceScale = 60.0f;
 
 QCAR::DataSet* dataSetCheckerboard = 0;
