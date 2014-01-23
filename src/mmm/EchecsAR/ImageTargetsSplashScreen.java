@@ -20,35 +20,34 @@ import android.content.res.Configuration;
 import android.os.Bundle;
 import android.os.Handler;
 
+public class ImageTargetsSplashScreen extends Activity {
+	public void onCreate(Bundle savedInstanceState) {
+		super.onCreate(savedInstanceState);
 
-public class ImageTargetsSplashScreen extends Activity
-{
-    public void onCreate(Bundle savedInstanceState)
-    {
-        super.onCreate(savedInstanceState);
+		// Sets the Splash Screen Layout
+		setContentView(R.layout.splash_screen);
 
-        // Sets the Splash Screen Layout
-        setContentView(R.layout.splash_screen);
+		// Start directly the ImageTargets activity for faster testing
+		Intent i = new Intent(ImageTargetsSplashScreen.this, ImageTargets.class);
+		startActivity(i);
 
-        // Generates a Handler to launch the About Screen
-        // after 2 seconds
-        final Handler handler = new Handler();
-        handler.postDelayed(new Runnable()
-        {
-            public void run()
-            {
-                // Starts the About Screen Activity
-                startActivity(new Intent(ImageTargetsSplashScreen.this,
-                        AboutScreen.class));
-            }
-        }, 2000L);
-    }
+		/*
+		// Generates a Handler to launch the About Screen
+		// after 2 seconds
+		final Handler handler = new Handler();
+		handler.postDelayed(new Runnable() {
+			public void run() {
+				// Starts the About Screen Activity
+				startActivity(new Intent(ImageTargetsSplashScreen.this,
+						AboutScreen.class));
+			}
+		}, 1000L);
+		*/
+	}
 
-
-    public void onConfigurationChanged(Configuration newConfig)
-    {
-        // Manages auto rotation for the Splash Screen Layout
-        super.onConfigurationChanged(newConfig);
-        setContentView(R.layout.splash_screen);
-    }
+	public void onConfigurationChanged(Configuration newConfig) {
+		// Manages auto rotation for the Splash Screen Layout
+		super.onConfigurationChanged(newConfig);
+		setContentView(R.layout.splash_screen);
+	}
 }
