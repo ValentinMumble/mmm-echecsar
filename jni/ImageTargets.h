@@ -25,6 +25,7 @@
 #include <QCAR/DataSet.h>
 
 #include "SampleUtils.h"
+#include "SampleMath.h"
 #include "Texture.h"
 #include "CubeShaders.h"
 
@@ -62,50 +63,6 @@ extern "C" {
 #define MAX_TAP_TIMER 200
 #define MAX_TAP_DISTANCE2 400
 
-float* vertices[N / 4] = {rookVertices, knightVertices, bishopVertices, queenVertices, kingVertices, bishopVertices, knightVertices, rookVertices};
-float* normals[N / 4] = {rookNormals, knightNormals, bishopNormals, queenNormals, kingNormals, bishopNormals, knightNormals, rookNormals};
-float* texCoords[N / 4] = {rookTexCoords, knightTexCoords, bishopTexCoords, queenTexCoords, kingTexCoords, bishopTexCoords, knightTexCoords, rookTexCoords};
-int numVertices[N / 4] = {rookNumVertices, knightNumVertices, bishopNumVertices, queenNumVertices, kingNumVertices, bishopNumVertices, knightNumVertices, rookNumVertices};
-
-// Textures:
-int textureCount = 0;
-Texture** textures = 0;
-
-// OpenGL ES 2.0 specific:
-unsigned int shaderProgramID = 0;
-GLint vertexHandle = 0;
-GLint normalHandle = 0;
-GLint textureCoordHandle = 0;
-GLint mvpMatrixHandle = 0;
-GLint texSampler2DHandle = 0;
-
-// Screen dimensions:
-unsigned int screenWidth = 0;
-unsigned int screenHeight = 0;
-
-// Indicates whether screen is in portrait (true) or landscape (false) mode
-bool isActivityInPortraitMode = false;
-
-// The projection matrix used for rendering virtual objects:
-QCAR::Matrix44F projectionMatrix;
-
-// Constants:
-static const float kPieceScale = 60.0f;
-
-QCAR::DataSet* dataSetCheckerboard = 0;
-QCAR::State state;
-
-bool switchDataSetAsap = false;
-
-struct point {
-	float x;
-	float y;
-	float z;
-};
-
-struct point wPiecesCoords[N / 2];
-struct point bPiecesCoords[N / 2];
-
 enum ActionType {
     ACTION_DOWN,
     ACTION_MOVE,
@@ -131,7 +88,6 @@ typedef struct _TouchEvent {
     bool didTap;
 } TouchEvent;
 
-TouchEvent touch1, touch2;
 
 typedef struct _Piece {
     int id;
@@ -139,7 +95,6 @@ typedef struct _Piece {
 
     QCAR::Vec2F position;
     QCAR::Matrix44F transform;
-    QCAR::Matrix44F pickingTransform;
     float *vertices;
     float *normals;
     float *texCoords;
@@ -149,11 +104,48 @@ typedef struct _Piece {
     int restingFrameCount;
 } Piece;
 
-Piece wPieces[N / 2];
-Piece bPieces[N / 2];
+float* vertices[N / 4] = {rookVertices, knightVertices, bishopVertices, queenVertices, kingVertices, bishopVertices, knightVertices, rookVertices};
+float* normals[N / 4] = {rookNormals, knightNormals, bishopNormals, queenNormals, kingNormals, bishopNormals, knightNormals, rookNormals};
+float* texCoords[N / 4] = {rookTexCoords, knightTexCoords, bishopTexCoords, queenTexCoords, kingTexCoords, bishopTexCoords, knightTexCoords, rookTexCoords};
+int numVertices[N / 4] = {rookNumVertices, knightNumVertices, bishopNumVertices, queenNumVertices, kingNumVertices, bishopNumVertices, knightNumVertices, rookNumVertices};
+
+// Textures:
+int textureCount = 0;
+Texture** textures = 0;
+
+// OpenGL ES 2.0 specific:
+unsigned int shaderProgramID = 0;
+GLint vertexHandle = 0;
+GLint normalHandle = 0;
+GLint textureCoordHandle = 0;
+GLint mvpMatrixHandle = 0;
+GLint texSampler2DHandle = 0;
+
+// Screen dimensions:
+unsigned int screenWidth = 0;
+unsigned int screenHeight = 0;
+
+// Indicates whether screen is in portrait (true) or landscape (false) mode
+bool isActivityInPortraitMode = false;
+
+// The projection matrix used for rendering virtual objects:
+QCAR::Matrix44F projectionMatrix, modelViewMatrix;
+
+// Constants:
+static const float kPieceScale = 60.0f;
+
+QCAR::DataSet* dataSetCheckerboard = 0;
+
+bool switchDataSetAsap = false;
+
+TouchEvent touch1, touch2;
+
+Piece wPieces[N / 2], bPieces[N / 2];
 
 Piece* selectedPiece;
 
-void drawPiece(int, Piece *, float);
+void drawPiece(Piece *);
+
+void updatePieceTransform(Piece *);
 
 unsigned long getCurrentTimeMS();

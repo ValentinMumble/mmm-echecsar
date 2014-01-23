@@ -174,7 +174,12 @@ Java_mmm_EchecsAR_ImageTargets_onQCARInitializedNative(JNIEnv *, jobject)
 		wPieces[i].numVertices = bPieces[i].numVertices = numVertices[i];
 		wPieces[i].textureId = bPieces[i].textureId = 0;
 
+		wPieces[i].transform = bPieces[i].transform = SampleMath::Matrix44FIdentity();
+
 		x += SQUARE_SIZE;
+
+		updatePieceTransform(&wPieces[i]);
+		updatePieceTransform(&bPieces[i]);
 	}
 
 	// Pawns
@@ -193,6 +198,9 @@ Java_mmm_EchecsAR_ImageTargets_onQCARInitializedNative(JNIEnv *, jobject)
 		wPieces[i].textureId = bPieces[i].textureId = 0;
 
 		x += SQUARE_SIZE;
+
+		updatePieceTransform(&wPieces[i]);
+		updatePieceTransform(&bPieces[i]);
 	}
 
 	// Comment in to enable tracking of up to 2 targets simultaneously and
@@ -209,7 +217,7 @@ Java_mmm_EchecsAR_ImageTargetsRenderer_renderFrame(JNIEnv *, jobject)
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 	// Get the state from QCAR and mark the beginning of a rendering section
-	state = QCAR::Renderer::getInstance().begin();
+	QCAR::State state = QCAR::Renderer::getInstance().begin();
 
 	// Explicitly render the Video Background
 	QCAR::Renderer::getInstance().drawVideoBackground();
@@ -227,15 +235,22 @@ Java_mmm_EchecsAR_ImageTargetsRenderer_renderFrame(JNIEnv *, jobject)
 	glFrontFace(GL_CCW);//Back camera
 
 	// Did we find any trackables this frame?
-	for(int tIdx = 0; tIdx < state.getNumTrackableResults(); tIdx++) {
-		int textureId = 1;
+	if (state.getNumTrackableResults() > 0) {
+
+		// Get the first trackable
+		const QCAR::TrackableResult* trackableResult = state.getTrackableResult(0);
+		const QCAR::Trackable& trackable = trackableResult->getTrackable();
+
+		modelViewMatrix = QCAR::Tool::convertPose2GLMatrix(
+				trackableResult->getPose());
+
 		glUseProgram(shaderProgramID);
 		glActiveTexture(GL_TEXTURE0);
 		glUniform1i(texSampler2DHandle, 0 /*GL_TEXTURE0*/);
 
 		for (int i = 0; i < N / 2; i++) {
-			drawPiece(tIdx, &wPieces[i], kPieceScale);
-			drawPiece(tIdx, &bPieces[i], kPieceScale);
+			drawPiece(&wPieces[i]);
+			drawPiece(&bPieces[i]);
 		}
 
 		glDisableVertexAttribArray(vertexHandle);
@@ -250,20 +265,14 @@ Java_mmm_EchecsAR_ImageTargetsRenderer_renderFrame(JNIEnv *, jobject)
 	QCAR::Renderer::getInstance().end();
 }
 
-void drawPiece(int tIdx, Piece *piece, float scale) {
-	// Get the trackable:
-	const QCAR::TrackableResult* result = state.getTrackableResult(tIdx);
-	const QCAR::Trackable& trackable = result->getTrackable();
+void drawPiece(Piece *piece) {
+	QCAR::Matrix44F modelViewProjection, objectMatrix;
 
-	QCAR::Matrix44F modelViewProjection;
-	QCAR::Matrix44F modelViewMatrix = QCAR::Tool::convertPose2GLMatrix(
-			result->getPose());
-
-	SampleUtils::translatePoseMatrix(piece->position.data[0], piece->position.data[1], 0,
-			&modelViewMatrix.data[0]);
-	SampleUtils::scalePoseMatrix(scale, scale, scale, &modelViewMatrix.data[0]);
+	// On multiplie la matrice modelView avec celle de la piece et on stocke la matrice resultat dans objectMatrix
+	SampleUtils::multiplyMatrix(&modelViewMatrix.data[0], &piece->transform.data[0], &objectMatrix.data[0]);
+	// On multiplie objectMatrix avec la matrice de projection
 	SampleUtils::multiplyMatrix(&projectionMatrix.data[0],
-			&modelViewMatrix.data[0], &modelViewProjection.data[0]);
+			&objectMatrix.data[0], &modelViewProjection.data[0]);
 
 	glVertexAttribPointer(vertexHandle, 3, GL_FLOAT, GL_FALSE, 0,
 			(const GLvoid*) &piece->vertices[0]);
@@ -279,6 +288,14 @@ void drawPiece(int tIdx, Piece *piece, float scale) {
 	glUniformMatrix4fv(mvpMatrixHandle, 1, GL_FALSE,
 			(GLfloat*) &modelViewProjection.data[0]);
 	glDrawArrays(GL_TRIANGLES, 0, piece->numVertices);
+}
+
+void updatePieceTransform(Piece *piece) {
+	// Reset the piece transform to the identity matrix
+	piece->transform = SampleMath::Matrix44FIdentity();
+	float* transformPtr = &piece->transform.data[0];
+	SampleUtils::translatePoseMatrix(piece->position.data[0], piece->position.data[1], 0, transformPtr);
+	SampleUtils::scalePoseMatrix(kPieceScale, kPieceScale, kPieceScale, transformPtr);
 }
 
 JNIEXPORT void JNICALL
