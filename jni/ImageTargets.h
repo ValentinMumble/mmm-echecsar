@@ -6,6 +6,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <assert.h>
+#include <math.h>
 
 #include <GLES2/gl2.h>
 #include <GLES2/gl2ext.h>
@@ -130,6 +131,7 @@ bool isActivityInPortraitMode = false;
 
 // The projection matrix used for rendering virtual objects:
 QCAR::Matrix44F projectionMatrix, modelViewMatrix;
+QCAR::Matrix44F inverseProjMatrix;
 
 // Constants:
 static const float kPieceScale = 60.0f;
@@ -137,6 +139,8 @@ static const float kPieceScale = 60.0f;
 QCAR::DataSet* dataSetCheckerboard = 0;
 
 bool switchDataSetAsap = false;
+
+unsigned long lastTapTime;
 
 TouchEvent touch1, touch2;
 
@@ -147,5 +151,13 @@ Piece* selectedPiece;
 void drawPiece(Piece *);
 
 void updatePieceTransform(Piece *);
+
+void handleTouches();
+
+void projectScreenPointToPlane(QCAR::Vec2F point, QCAR::Vec3F planeCenter, QCAR::Vec3F planeNormal,
+                               QCAR::Vec3F &intersection, QCAR::Vec3F &lineStart, QCAR::Vec3F &lineEnd);
+
+bool linePlaneIntersection(QCAR::Vec3F lineStart, QCAR::Vec3F lineEnd, QCAR::Vec3F pointOnPlane,
+                           QCAR::Vec3F planeNormal, QCAR::Vec3F &intersection);
 
 unsigned long getCurrentTimeMS();
