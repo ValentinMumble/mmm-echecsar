@@ -308,7 +308,9 @@ public class ImageTargets extends Activity {
 	 * for rendering.
 	 */
 	private void loadTextures() {
-		mTextures.add(Texture.loadTextureFromApk("wood.jpg",
+		mTextures.add(Texture.loadTextureFromApk("white.jpg",
+				getAssets()));
+		mTextures.add(Texture.loadTextureFromApk("black.jpg",
 				getAssets()));
 	}
 

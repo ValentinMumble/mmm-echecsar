@@ -172,9 +172,8 @@ Java_mmm_EchecsAR_ImageTargets_onQCARInitializedNative(JNIEnv *, jobject)
 		wPieces[i].normals = bPieces[i].normals = normals[i];
 		wPieces[i].texCoords = bPieces[i].texCoords = texCoords[i];
 		wPieces[i].numVertices = bPieces[i].numVertices = numVertices[i];
-		wPieces[i].textureId = bPieces[i].textureId = 0;
-
-		wPieces[i].transform = bPieces[i].transform = SampleMath::Matrix44FIdentity();
+		wPieces[i].textureId = 0;
+		bPieces[i].textureId = 1;
 
 		x += SQUARE_SIZE;
 
@@ -195,7 +194,8 @@ Java_mmm_EchecsAR_ImageTargets_onQCARInitializedNative(JNIEnv *, jobject)
 		wPieces[i].normals = bPieces[i].normals = pawnNormals;
 		wPieces[i].texCoords = bPieces[i].texCoords = pawnTexCoords;
 		wPieces[i].numVertices = bPieces[i].numVertices = pawnNumVertices;
-		wPieces[i].textureId = bPieces[i].textureId = 0;
+		wPieces[i].textureId = 0;
+		bPieces[i].textureId = 1;
 
 		x += SQUARE_SIZE;
 
