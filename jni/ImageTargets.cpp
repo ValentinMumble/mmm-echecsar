@@ -151,6 +151,66 @@ Java_mmm_EchecsAR_ImageTargets_destroyTrackerData(JNIEnv *, jobject)
 }
 
 JNIEXPORT void JNICALL
+Java_mmm_EchecsAR_ImageTargets_nativeTouchEvent(JNIEnv* , jobject, jint actionType, jint pointerId, jfloat x, jfloat y)
+{
+	TouchEvent* touchEvent;
+
+	// Determine which finger this event represents
+	if (pointerId == 0) {
+		touchEvent = &touch1;
+	} else if (pointerId == 1) {
+		touchEvent = &touch2;
+	} else {
+		return;
+	}
+
+	if (actionType == ACTION_DOWN) {
+		// On touch down, reset the following:
+		touchEvent->lastX = x;
+		touchEvent->lastY = y;
+		touchEvent->startX = x;
+		touchEvent->startY = y;
+		touchEvent->startTime = getCurrentTimeMS();
+		touchEvent->didTap = false;
+	} else {
+		// Store the last event's position
+		touchEvent->lastX = touchEvent->x;
+		touchEvent->lastY = touchEvent->y;
+	}
+
+	// Store the lifetime of the touch, used for tap recognition
+	unsigned long time = getCurrentTimeMS();
+	touchEvent->dt = time - touchEvent->startTime;
+
+	// Store the distance squared from the initial point, for tap recognition
+	float dx = touchEvent->lastX - touchEvent->startX;
+	float dy = touchEvent->lastY - touchEvent->startY;
+	touchEvent->dist2 = dx * dx + dy * dy;
+
+	if (actionType == ACTION_UP) {
+		// On touch up, this touch is no longer active
+		touchEvent->isActive = false;
+
+		// Determine if this touch up ends a tap gesture
+		// The tap must be quick and localized
+		if (touchEvent->dt < MAX_TAP_TIMER && touchEvent->dist2 < MAX_TAP_DISTANCE2) {
+			touchEvent->didTap = true;
+			touchEvent->tapX = touchEvent->startX;
+			touchEvent->tapY = touchEvent->startY;
+		}
+	} else {
+		// On touch down or move, this touch is active
+		touchEvent->isActive = true;
+	}
+
+	// Set the touch information for this event
+	touchEvent->actionType = actionType;
+	touchEvent->pointerId = pointerId;
+	touchEvent->x = x;
+	touchEvent->y = y;
+}
+
+JNIEXPORT void JNICALL
 Java_mmm_EchecsAR_ImageTargets_onQCARInitializedNative(JNIEnv *, jobject)
 {
 	// Register the update callback where we handle the data set swap:
@@ -286,7 +346,11 @@ void drawPiece(Piece *piece) {
 	glEnableVertexAttribArray(normalHandle);
 	glEnableVertexAttribArray(textureCoordHandle);
 
-	glBindTexture(GL_TEXTURE_2D, textures[piece->textureId]->mTextureID);
+	int textureId = piece->textureId;
+	if (piece == selectedPiece) {
+		textureId = 2;
+	}
+	glBindTexture(GL_TEXTURE_2D, textures[textureId]->mTextureID);
 	glUniformMatrix4fv(mvpMatrixHandle, 1, GL_FALSE,
 			(GLfloat*) &modelViewProjection.data[0]);
 	glDrawArrays(GL_TRIANGLES, 0, piece->numVertices);
@@ -309,39 +373,50 @@ void handleTouches() {
 		QCAR::Vec3F intersection, lineStart, lineEnd;
 		projectScreenPointToPlane(QCAR::Vec2F(touch1.tapX, touch1.tapY), QCAR::Vec3F(0, 0, 0), QCAR::Vec3F(0, 0, 1), intersection, lineStart, lineEnd);
 
-		LOG("touchx : %f", touch1.tapX);
-		LOG("touchy : %f", touch1.tapY);
-		LOG("startx : %f", lineStart.data[0]);
-		LOG("starty : %f", lineStart.data[1]);
-		LOG("endx : %f", lineEnd.data[0]);
-		LOG("endy : %f", lineEnd.data[1]);
-
 		Piece* piece;
 		Piece* selected = NULL;
-		float dist;
 
-		// For each domino, check for intersection with our picking line
-		for (int i = 0; i < N / 2; i++) {
-			piece = &wPieces[i];
-//            bool intersection = checkIntersectionLine(piece, lineStart, lineEnd);
-//            if (intersection) {
-//                selected = piece;
-//                //selectedDominoIndex = i;
-//                break;
-//            }
+		if (intersection.data[0] < 0) {
+			intersection.data[0] = floor(intersection.data[0] / SQUARE_SIZE) * SQUARE_SIZE + SQUARE_SIZE / 2;
+		} else {
+			intersection.data[0] = ceil(intersection.data[0] / SQUARE_SIZE) * SQUARE_SIZE - SQUARE_SIZE / 2;
+		}
+		if (intersection.data[1] < 0) {
+			intersection.data[1] = floor(intersection.data[1] / SQUARE_SIZE) * SQUARE_SIZE + SQUARE_SIZE / 2;
+		} else {
+			intersection.data[1] = ceil(intersection.data[1] / SQUARE_SIZE) * SQUARE_SIZE - SQUARE_SIZE / 2;
 		}
 
-		if (selected == NULL && selectedPiece == NULL) {
-			// We did not pick a new domino, and do not have a currently selected domino to deselect
-			// Try to drop a new domino at the tap's intersection point with the ground plane
-//            QCAR::Vec2F position(intersection.data[0], intersection.data[1]);
-//            if (canDropDomino(position)) {
-//                dropDomino(position);
-//            }
+		// For each domino, check for intersection with the touch
+		for (int i = 0; i < N / 2; i++) {
+			// Check the white pieces
+			piece = &wPieces[i];
+			if (piece->position.data[0] == intersection.data[0] && piece->position.data[1] == intersection.data[1]) {
+				selected = piece;
+				break;
+			}
 
+			// Check the black pieces
+			piece = &bPieces[i];
+			if (piece->position.data[0] == intersection.data[0] && piece->position.data[1] == intersection.data[1]) {
+				selected = piece;
+				break;
+			}
+		}
+
+		if (selected == NULL) {
+			// If selected is NULL, this will deselect the currently selected piece
+			// If selectedPiece is not NULL, the piece will be moved
+			// TODO: chess rules
+			bool isMoveAllowed = true;
+			if (selectedPiece != NULL && isMoveAllowed) {
+				selectedPiece->position.data[0] = intersection.data[0];
+				selectedPiece->position.data[1] = intersection.data[1];
+				updatePieceTransform(selectedPiece);
+			}
+			selectedPiece = NULL;
 		} else {
-			// If selected is NULL, this will deselect the currently selected domino
-			// If selected is not NULL, this will select a new domino
+			// If selected is not NULL, this will select a new piece
 			selectedPiece = selected;
 		}
 
@@ -349,68 +424,6 @@ void handleTouches() {
 		lastTapTime = touch1.startTime;
 
 	}
-}
-
-JNIEXPORT void JNICALL
-Java_mmm_EchecsAR_ImageTargets_nativeTouchEvent(JNIEnv* , jobject, jint actionType, jint pointerId, jfloat x, jfloat y)
-{
-	TouchEvent* touchEvent;
-
-	// Determine which finger this event represents
-	if (pointerId == 0) {
-		touchEvent = &touch1;
-	} else if (pointerId == 1) {
-		touchEvent = &touch2;
-	} else {
-		return;
-	}
-
-	if (actionType == ACTION_DOWN) {
-		// On touch down, reset the following:
-		touchEvent->lastX = x;
-		touchEvent->lastY = y;
-		touchEvent->startX = x;
-		touchEvent->startY = y;
-		touchEvent->startTime = getCurrentTimeMS();
-		touchEvent->didTap = false;
-	} else {
-		// Store the last event's position
-		touchEvent->lastX = touchEvent->x;
-		touchEvent->lastY = touchEvent->y;
-	}
-
-	// Store the lifetime of the touch, used for tap recognition
-	unsigned long time = getCurrentTimeMS();
-	touchEvent->dt = time - touchEvent->startTime;
-
-	// Store the distance squared from the initial point, for tap recognition
-	float dx = touchEvent->lastX - touchEvent->startX;
-	float dy = touchEvent->lastY - touchEvent->startY;
-	touchEvent->dist2 = dx * dx + dy * dy;
-
-	if (actionType == ACTION_UP) {
-		// On touch up, this touch is no longer active
-		touchEvent->isActive = false;
-
-		// Determine if this touch up ends a tap gesture
-		// The tap must be quick and localized
-		if (touchEvent->dt < MAX_TAP_TIMER && touchEvent->dist2 < MAX_TAP_DISTANCE2) {
-			touchEvent->didTap = true;
-			touchEvent->tapX = touchEvent->startX;
-			touchEvent->tapY = touchEvent->startY;
-		}
-	} else {
-		// On touch down or move, this touch is active
-		touchEvent->isActive = true;
-	}
-
-	// Set the touch information for this event
-	touchEvent->actionType = actionType;
-	touchEvent->pointerId = pointerId;
-	touchEvent->x = x;
-	touchEvent->y = y;
-//	LOG("x: %f", x);
-//	LOG("y: %f", y);
 }
 
 void projectScreenPointToPlane(QCAR::Vec2F point, QCAR::Vec3F planeCenter, QCAR::Vec3F planeNormal,
