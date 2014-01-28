@@ -329,222 +329,9 @@ Java_mmm_EchecsAR_ImageTargetsRenderer_renderFrame(JNIEnv *, jobject)
 	QCAR::Renderer::getInstance().end();
 }
 
-void drawPiece(Piece *piece) {
-	QCAR::Matrix44F modelViewProjection, objectMatrix;
-
-	// On multiplie la matrice modelView avec celle de la piece et on stocke la matrice resultat dans objectMatrix
-	SampleUtils::multiplyMatrix(&modelViewMatrix.data[0], &piece->transform.data[0], &objectMatrix.data[0]);
-	// On multiplie objectMatrix avec la matrice de projection
-	SampleUtils::multiplyMatrix(&projectionMatrix.data[0],
-			&objectMatrix.data[0], &modelViewProjection.data[0]);
-
-	glVertexAttribPointer(vertexHandle, 3, GL_FLOAT, GL_FALSE, 0,
-			(const GLvoid*) &piece->vertices[0]);
-	glVertexAttribPointer(normalHandle, 3, GL_FLOAT, GL_FALSE, 0,
-			(const GLvoid*) &piece->normals[0]);
-	glVertexAttribPointer(textureCoordHandle, 2, GL_FLOAT, GL_FALSE, 0,
-			(const GLvoid*) &piece->texCoords[0]);
-	glEnableVertexAttribArray(vertexHandle);
-	glEnableVertexAttribArray(normalHandle);
-	glEnableVertexAttribArray(textureCoordHandle);
-
-	int textureId = piece->textureId;
-	if (piece == selectedPiece) {
-		textureId = 2;
-	}
-	glBindTexture(GL_TEXTURE_2D, textures[textureId]->mTextureID);
-	glUniformMatrix4fv(mvpMatrixHandle, 1, GL_FALSE,
-			(GLfloat*) &modelViewProjection.data[0]);
-	glDrawArrays(GL_TRIANGLES, 0, piece->numVertices);
-}
-
-void updatePieceTransform(Piece *piece) {
-	// Reset the piece transform to the identity matrix
-	piece->transform = SampleMath::Matrix44FIdentity();
-	float* transformPtr = &piece->transform.data[0];
-	SampleUtils::translatePoseMatrix(piece->position.data[0], piece->position.data[1], 0, transformPtr);
-	SampleUtils::scalePoseMatrix(kPieceScale, kPieceScale, kPieceScale, transformPtr);
-}
-
-void handleTouches() {
-	// If there is a new tap that we haven't handled yet:
-	if (touch1.didTap && touch1.startTime > lastTapTime) {
-
-		// Find the start and end points in world space for the tap
-		// These will lie on the near and far plane and can be used for picking
-		QCAR::Vec3F intersection, lineStart, lineEnd;
-		projectScreenPointToPlane(QCAR::Vec2F(touch1.tapX, touch1.tapY), QCAR::Vec3F(0, 0, 0), QCAR::Vec3F(0, 0, 1), intersection, lineStart, lineEnd);
-
-		Piece* piece;
-		Piece* selected = NULL;
-
-		if (intersection.data[0] < 0) {
-			intersection.data[0] = floor(intersection.data[0] / SQUARE_SIZE) * SQUARE_SIZE + SQUARE_SIZE / 2;
-		} else {
-			intersection.data[0] = ceil(intersection.data[0] / SQUARE_SIZE) * SQUARE_SIZE - SQUARE_SIZE / 2;
-		}
-		if (intersection.data[1] < 0) {
-			intersection.data[1] = floor(intersection.data[1] / SQUARE_SIZE) * SQUARE_SIZE + SQUARE_SIZE / 2;
-		} else {
-			intersection.data[1] = ceil(intersection.data[1] / SQUARE_SIZE) * SQUARE_SIZE - SQUARE_SIZE / 2;
-		}
-
-		// For each domino, check for intersection with the touch
-		for (int i = 0; i < N / 2; i++) {
-			// Check the white pieces
-			piece = &wPieces[i];
-			if (piece->position.data[0] == intersection.data[0] && piece->position.data[1] == intersection.data[1]) {
-				selected = piece;
-				break;
-			}
-
-			// Check the black pieces
-			piece = &bPieces[i];
-			if (piece->position.data[0] == intersection.data[0] && piece->position.data[1] == intersection.data[1]) {
-				selected = piece;
-				break;
-			}
-		}
-
-		if (selected == NULL) {
-			// If selected is NULL, this will deselect the currently selected piece
-			// If selectedPiece is not NULL, the piece will be moved
-			// TODO: chess rules
-			bool isMoveAllowed = true;
-			if (selectedPiece != NULL && isMoveAllowed) {
-				selectedPiece->position.data[0] = intersection.data[0];
-				selectedPiece->position.data[1] = intersection.data[1];
-				updatePieceTransform(selectedPiece);
-			}
-			selectedPiece = NULL;
-		} else {
-			// If selected is not NULL, this will select a new piece
-			selectedPiece = selected;
-		}
-
-		// Store the timestamp for this tap so we know we've handled it
-		lastTapTime = touch1.startTime;
-
-	}
-}
-
-void projectScreenPointToPlane(QCAR::Vec2F point, QCAR::Vec3F planeCenter, QCAR::Vec3F planeNormal,
-		QCAR::Vec3F &intersection, QCAR::Vec3F &lineStart, QCAR::Vec3F &lineEnd) {
-	// Window Coordinates to Normalized Device Coordinates
-	QCAR::VideoBackgroundConfig config = QCAR::Renderer::getInstance().getVideoBackgroundConfig();
-
-	float halfScreenWidth = screenWidth / 2.0f;
-	float halfScreenHeight = screenHeight / 2.0f;
-
-	float halfViewportWidth = config.mSize.data[0] / 2.0f;
-	float halfViewportHeight = config.mSize.data[1] / 2.0f;
-
-	float x = (point.data[0] - halfScreenWidth) / halfViewportWidth;
-	float y = (point.data[1] - halfScreenHeight) / halfViewportHeight * -1;
-
-	QCAR::Vec4F ndcNear(x, y, -1, 1);
-	QCAR::Vec4F ndcFar(x, y, 1, 1);
-
-	// Normalized Device Coordinates to Eye Coordinates
-	QCAR::Vec4F pointOnNearPlane = SampleMath::Vec4FTransform(ndcNear, inverseProjMatrix);
-	QCAR::Vec4F pointOnFarPlane = SampleMath::Vec4FTransform(ndcFar, inverseProjMatrix);
-	pointOnNearPlane = SampleMath::Vec4FDiv(pointOnNearPlane, pointOnNearPlane.data[3]);
-	pointOnFarPlane = SampleMath::Vec4FDiv(pointOnFarPlane, pointOnFarPlane.data[3]);
-
-	// Eye Coordinates to Object Coordinates
-	QCAR::Matrix44F inverseModelViewMatrix = SampleMath::Matrix44FInverse(modelViewMatrix);
-
-	QCAR::Vec4F nearWorld = SampleMath::Vec4FTransform(pointOnNearPlane, inverseModelViewMatrix);
-	QCAR::Vec4F farWorld = SampleMath::Vec4FTransform(pointOnFarPlane, inverseModelViewMatrix);
-
-	lineStart = QCAR::Vec3F(nearWorld.data[0], nearWorld.data[1], nearWorld.data[2]);
-	lineEnd = QCAR::Vec3F(farWorld.data[0], farWorld.data[1], farWorld.data[2]);
-	linePlaneIntersection(lineStart, lineEnd, planeCenter, planeNormal, intersection);
-}
-
-bool linePlaneIntersection(QCAR::Vec3F lineStart, QCAR::Vec3F lineEnd,
-		QCAR::Vec3F pointOnPlane, QCAR::Vec3F planeNormal,
-		QCAR::Vec3F &intersection) {
-	QCAR::Vec3F lineDir = SampleMath::Vec3FSub(lineEnd, lineStart);
-	lineDir = SampleMath::Vec3FNormalize(lineDir);
-
-	QCAR::Vec3F planeDir = SampleMath::Vec3FSub(pointOnPlane, lineStart);
-
-	float n = SampleMath::Vec3FDot(planeNormal, planeDir);
-	float d = SampleMath::Vec3FDot(planeNormal, lineDir);
-
-	if (fabs(d) < 0.00001) {
-		// Line is parallel to plane
-		return false;
-	}
-
-	float dist = n / d;
-
-	QCAR::Vec3F offset = SampleMath::Vec3FScale(lineDir, dist);
-	intersection = SampleMath::Vec3FAdd(lineStart, offset);
-}
-
-// ----------------------------------------------------------------------------
-// Time utility
-// ----------------------------------------------------------------------------
-
-unsigned long getCurrentTimeMS() {
-	struct timeval tv;
-	gettimeofday(&tv, NULL);
-	unsigned long s = tv.tv_sec * 1000;
-	unsigned long us = tv.tv_usec / 1000;
-	return s + us;
-}
-
-void configureVideoBackground() {
-	// Get the default video mode:
-	QCAR::CameraDevice& cameraDevice = QCAR::CameraDevice::getInstance();
-	QCAR::VideoMode videoMode = cameraDevice.getVideoMode(
-			QCAR::CameraDevice::MODE_DEFAULT);
-
-	// Configure the video background
-	QCAR::VideoBackgroundConfig config;
-	config.mEnabled = true;
-	config.mSynchronous = true;
-	config.mPosition.data[0] = 0.0f;
-	config.mPosition.data[1] = 0.0f;
-
-	if (isActivityInPortraitMode) {
-		//LOG("configureVideoBackground PORTRAIT");
-		config.mSize.data[0] = videoMode.mHeight
-		* (screenHeight / (float) videoMode.mWidth);
-		config.mSize.data[1] = screenHeight;
-
-		if (config.mSize.data[0] < screenWidth) {
-			LOG(
-					"Correcting rendering background size to handle missmatch between screen and video aspect ratios.");
-			config.mSize.data[0] = screenWidth;
-			config.mSize.data[1] = screenWidth
-			* (videoMode.mWidth / (float) videoMode.mHeight);
-		}
-	} else {
-		//LOG("configureVideoBackground LANDSCAPE");
-		config.mSize.data[0] = screenWidth;
-		config.mSize.data[1] = videoMode.mHeight
-		* (screenWidth / (float) videoMode.mWidth);
-
-		if (config.mSize.data[1] < screenHeight) {
-			LOG(
-					"Correcting rendering background size to handle missmatch between screen and video aspect ratios.");
-			config.mSize.data[0] = screenHeight
-			* (videoMode.mWidth / (float) videoMode.mHeight);
-			config.mSize.data[1] = screenHeight;
-		}
-	}
-
-	LOG(
-			"Configure Video Background : Video (%d,%d), Screen (%d,%d), mSize (%d,%d)",
-			videoMode.mWidth, videoMode.mHeight, screenWidth, screenHeight,
-			config.mSize.data[0], config.mSize.data[1]);
-
-	// Set the config:
-	QCAR::Renderer::getInstance().setVideoBackgroundConfig(config);
-}
+JavaVM* javaVM = NULL;
+jclass activityClass;
+jobject activityObj;
 
 JNIEXPORT void JNICALL
 Java_mmm_EchecsAR_ImageTargets_initApplicationNative(
@@ -556,8 +343,10 @@ Java_mmm_EchecsAR_ImageTargets_initApplicationNative(
 	screenWidth = width;
 	screenHeight = height;
 
-	// Handle to the activity class:
-	jclass activityClass = env->GetObjectClass(obj);
+	env->GetJavaVM(&javaVM);
+	jclass cls = env->GetObjectClass(obj);
+	activityClass = (jclass) env->NewGlobalRef(cls);
+	activityObj = env->NewGlobalRef(obj);
 
 	jmethodID getTextureCountMethodID = env->GetMethodID(activityClass,
 			"getTextureCount", "()I");
@@ -568,6 +357,7 @@ Java_mmm_EchecsAR_ImageTargets_initApplicationNative(
 	}
 
 	textureCount = env->CallIntMethod(obj, getTextureCountMethodID);
+
 	if (!textureCount)
 	{
 		LOG("getTextureCount() returned zero.");
@@ -787,6 +577,234 @@ Java_mmm_EchecsAR_ImageTargetsRenderer_updateRendering(
 
 	// Reconfigure the video background
 	configureVideoBackground();
+}
+
+
+void drawPiece(Piece *piece) {
+	QCAR::Matrix44F modelViewProjection, objectMatrix;
+
+	// On multiplie la matrice modelView avec celle de la piece et on stocke la matrice resultat dans objectMatrix
+	SampleUtils::multiplyMatrix(&modelViewMatrix.data[0], &piece->transform.data[0], &objectMatrix.data[0]);
+	// On multiplie objectMatrix avec la matrice de projection
+	SampleUtils::multiplyMatrix(&projectionMatrix.data[0],
+			&objectMatrix.data[0], &modelViewProjection.data[0]);
+
+	glVertexAttribPointer(vertexHandle, 3, GL_FLOAT, GL_FALSE, 0,
+			(const GLvoid*) &piece->vertices[0]);
+	glVertexAttribPointer(normalHandle, 3, GL_FLOAT, GL_FALSE, 0,
+			(const GLvoid*) &piece->normals[0]);
+	glVertexAttribPointer(textureCoordHandle, 2, GL_FLOAT, GL_FALSE, 0,
+			(const GLvoid*) &piece->texCoords[0]);
+	glEnableVertexAttribArray(vertexHandle);
+	glEnableVertexAttribArray(normalHandle);
+	glEnableVertexAttribArray(textureCoordHandle);
+
+	int textureId = piece->textureId;
+	if (piece == selectedPiece) {
+		textureId = 2;
+	}
+	glBindTexture(GL_TEXTURE_2D, textures[textureId]->mTextureID);
+	glUniformMatrix4fv(mvpMatrixHandle, 1, GL_FALSE,
+			(GLfloat*) &modelViewProjection.data[0]);
+	glDrawArrays(GL_TRIANGLES, 0, piece->numVertices);
+}
+
+void updatePieceTransform(Piece *piece) {
+	// Reset the piece transform to the identity matrix
+	piece->transform = SampleMath::Matrix44FIdentity();
+	float* transformPtr = &piece->transform.data[0];
+	SampleUtils::translatePoseMatrix(piece->position.data[0], piece->position.data[1], 0, transformPtr);
+	SampleUtils::scalePoseMatrix(kPieceScale, kPieceScale, kPieceScale, transformPtr);
+}
+
+void handleTouches() {
+	// If there is a new tap that we haven't handled yet:
+	if (touch1.didTap && touch1.startTime > lastTapTime) {
+
+		// Find the start and end points in world space for the tap
+		// These will lie on the near and far plane and can be used for picking
+		QCAR::Vec3F intersection, lineStart, lineEnd;
+		projectScreenPointToPlane(QCAR::Vec2F(touch1.tapX, touch1.tapY), QCAR::Vec3F(0, 0, 0), QCAR::Vec3F(0, 0, 1), intersection, lineStart, lineEnd);
+
+		Piece* piece;
+		Piece* selected = NULL;
+
+		if (intersection.data[0] < 0) {
+			intersection.data[0] = floor(intersection.data[0] / SQUARE_SIZE) * SQUARE_SIZE + SQUARE_SIZE / 2;
+		} else {
+			intersection.data[0] = ceil(intersection.data[0] / SQUARE_SIZE) * SQUARE_SIZE - SQUARE_SIZE / 2;
+		}
+		if (intersection.data[1] < 0) {
+			intersection.data[1] = floor(intersection.data[1] / SQUARE_SIZE) * SQUARE_SIZE + SQUARE_SIZE / 2;
+		} else {
+			intersection.data[1] = ceil(intersection.data[1] / SQUARE_SIZE) * SQUARE_SIZE - SQUARE_SIZE / 2;
+		}
+
+		// For each domino, check for intersection with the touch
+		for (int i = 0; i < N / 2; i++) {
+			// Check the white pieces
+			piece = &wPieces[i];
+			if (piece->position.data[0] == intersection.data[0] && piece->position.data[1] == intersection.data[1]) {
+				selected = piece;
+				break;
+			}
+
+			// Check the black pieces
+			piece = &bPieces[i];
+			if (piece->position.data[0] == intersection.data[0] && piece->position.data[1] == intersection.data[1]) {
+				selected = piece;
+				break;
+			}
+		}
+
+		if (selected == NULL) {
+			// If selected is NULL, this will deselect the currently selected piece
+			// If selectedPiece is not NULL, the piece will be moved
+			// TODO: chess rules
+			bool isMoveAllowed = true;
+
+		    JNIEnv *env;
+			javaVM->AttachCurrentThread(&env, NULL);
+			jstring js = env->NewStringUTF("non");
+
+			if (selectedPiece != NULL && isMoveAllowed) {
+				selectedPiece->position.data[0] = intersection.data[0];
+				selectedPiece->position.data[1] = intersection.data[1];
+				updatePieceTransform(selectedPiece);
+				js = env->NewStringUTF("oui");
+			}
+
+			jmethodID method = env->GetMethodID(activityClass, "displayMessage", "(Ljava/lang/String;)V");
+			env->CallVoidMethod(activityObj, method, js);
+
+			selectedPiece = NULL;
+		} else {
+			// If selected is not NULL, this will select a new piece
+			selectedPiece = selected;
+		}
+
+		// Store the timestamp for this tap so we know we've handled it
+		lastTapTime = touch1.startTime;
+
+	}
+}
+
+void projectScreenPointToPlane(QCAR::Vec2F point, QCAR::Vec3F planeCenter, QCAR::Vec3F planeNormal,
+		QCAR::Vec3F &intersection, QCAR::Vec3F &lineStart, QCAR::Vec3F &lineEnd) {
+	// Window Coordinates to Normalized Device Coordinates
+	QCAR::VideoBackgroundConfig config = QCAR::Renderer::getInstance().getVideoBackgroundConfig();
+
+	float halfScreenWidth = screenWidth / 2.0f;
+	float halfScreenHeight = screenHeight / 2.0f;
+
+	float halfViewportWidth = config.mSize.data[0] / 2.0f;
+	float halfViewportHeight = config.mSize.data[1] / 2.0f;
+
+	float x = (point.data[0] - halfScreenWidth) / halfViewportWidth;
+	float y = (point.data[1] - halfScreenHeight) / halfViewportHeight * -1;
+
+	QCAR::Vec4F ndcNear(x, y, -1, 1);
+	QCAR::Vec4F ndcFar(x, y, 1, 1);
+
+	// Normalized Device Coordinates to Eye Coordinates
+	QCAR::Vec4F pointOnNearPlane = SampleMath::Vec4FTransform(ndcNear, inverseProjMatrix);
+	QCAR::Vec4F pointOnFarPlane = SampleMath::Vec4FTransform(ndcFar, inverseProjMatrix);
+	pointOnNearPlane = SampleMath::Vec4FDiv(pointOnNearPlane, pointOnNearPlane.data[3]);
+	pointOnFarPlane = SampleMath::Vec4FDiv(pointOnFarPlane, pointOnFarPlane.data[3]);
+
+	// Eye Coordinates to Object Coordinates
+	QCAR::Matrix44F inverseModelViewMatrix = SampleMath::Matrix44FInverse(modelViewMatrix);
+
+	QCAR::Vec4F nearWorld = SampleMath::Vec4FTransform(pointOnNearPlane, inverseModelViewMatrix);
+	QCAR::Vec4F farWorld = SampleMath::Vec4FTransform(pointOnFarPlane, inverseModelViewMatrix);
+
+	lineStart = QCAR::Vec3F(nearWorld.data[0], nearWorld.data[1], nearWorld.data[2]);
+	lineEnd = QCAR::Vec3F(farWorld.data[0], farWorld.data[1], farWorld.data[2]);
+	linePlaneIntersection(lineStart, lineEnd, planeCenter, planeNormal, intersection);
+}
+
+bool linePlaneIntersection(QCAR::Vec3F lineStart, QCAR::Vec3F lineEnd,
+		QCAR::Vec3F pointOnPlane, QCAR::Vec3F planeNormal,
+		QCAR::Vec3F &intersection) {
+	QCAR::Vec3F lineDir = SampleMath::Vec3FSub(lineEnd, lineStart);
+	lineDir = SampleMath::Vec3FNormalize(lineDir);
+
+	QCAR::Vec3F planeDir = SampleMath::Vec3FSub(pointOnPlane, lineStart);
+
+	float n = SampleMath::Vec3FDot(planeNormal, planeDir);
+	float d = SampleMath::Vec3FDot(planeNormal, lineDir);
+
+	if (fabs(d) < 0.00001) {
+		// Line is parallel to plane
+		return false;
+	}
+
+	float dist = n / d;
+
+	QCAR::Vec3F offset = SampleMath::Vec3FScale(lineDir, dist);
+	intersection = SampleMath::Vec3FAdd(lineStart, offset);
+}
+
+// ----------------------------------------------------------------------------
+// Time utility
+// ----------------------------------------------------------------------------
+
+unsigned long getCurrentTimeMS() {
+	struct timeval tv;
+	gettimeofday(&tv, NULL);
+	unsigned long s = tv.tv_sec * 1000;
+	unsigned long us = tv.tv_usec / 1000;
+	return s + us;
+}
+
+void configureVideoBackground() {
+	// Get the default video mode:
+	QCAR::CameraDevice& cameraDevice = QCAR::CameraDevice::getInstance();
+	QCAR::VideoMode videoMode = cameraDevice.getVideoMode(
+			QCAR::CameraDevice::MODE_DEFAULT);
+
+	// Configure the video background
+	QCAR::VideoBackgroundConfig config;
+	config.mEnabled = true;
+	config.mSynchronous = true;
+	config.mPosition.data[0] = 0.0f;
+	config.mPosition.data[1] = 0.0f;
+
+	if (isActivityInPortraitMode) {
+		//LOG("configureVideoBackground PORTRAIT");
+		config.mSize.data[0] = videoMode.mHeight
+		* (screenHeight / (float) videoMode.mWidth);
+		config.mSize.data[1] = screenHeight;
+
+		if (config.mSize.data[0] < screenWidth) {
+			LOG(
+					"Correcting rendering background size to handle missmatch between screen and video aspect ratios.");
+			config.mSize.data[0] = screenWidth;
+			config.mSize.data[1] = screenWidth
+			* (videoMode.mWidth / (float) videoMode.mHeight);
+		}
+	} else {
+		//LOG("configureVideoBackground LANDSCAPE");
+		config.mSize.data[0] = screenWidth;
+		config.mSize.data[1] = videoMode.mHeight
+		* (screenWidth / (float) videoMode.mWidth);
+
+		if (config.mSize.data[1] < screenHeight) {
+			LOG(
+					"Correcting rendering background size to handle missmatch between screen and video aspect ratios.");
+			config.mSize.data[0] = screenHeight
+			* (videoMode.mWidth / (float) videoMode.mHeight);
+			config.mSize.data[1] = screenHeight;
+		}
+	}
+
+	LOG(
+			"Configure Video Background : Video (%d,%d), Screen (%d,%d), mSize (%d,%d)",
+			videoMode.mWidth, videoMode.mHeight, screenWidth, screenHeight,
+			config.mSize.data[0], config.mSize.data[1]);
+
+	// Set the config:
+	QCAR::Renderer::getInstance().setVideoBackgroundConfig(config);
 }
 
 #ifdef __cplusplus

@@ -16,9 +16,9 @@ import java.lang.ref.WeakReference;
 import java.lang.reflect.Field;
 import java.util.Vector;
 
-import mmm.EchecsAR.R;
 import android.app.Activity;
 import android.app.AlertDialog;
+import android.content.Context;
 import android.content.DialogInterface;
 import android.content.pm.ActivityInfo;
 import android.content.res.Configuration;
@@ -61,6 +61,9 @@ public class ImageTargets extends Activity {
 	// Name of the native dynamic libraries to load:
 	private static final String NATIVE_LIB_SAMPLE = "ImageTargets";
 	private static final String NATIVE_LIB_QCAR = "QCAR";
+	
+	// A handler object for sending messages to the main activity thread
+    public static Handler mainActivityHandler;
 
 	// Constants for Hiding/Showing Loading dialog
 	static final int HIDE_LOADING_DIALOG = 0;
@@ -147,6 +150,23 @@ public class ImageTargets extends Activity {
 			}
 		}
 	}
+	
+	static class DisplayMessageHandler extends Handler {
+		
+		private Context context;
+		
+		public DisplayMessageHandler(Context ctx) {
+			context = ctx;
+		}
+		
+        @Override
+        public void handleMessage(Message msg) {
+            String text = (String) msg.obj;
+            int duration = Toast.LENGTH_SHORT;
+            Toast toast = Toast.makeText(context, text, duration);
+            toast.show();
+        }
+    };
 
 	private Handler loadingDialogHandler = new LoadingDialogHandler(this);
 
@@ -359,12 +379,24 @@ public class ImageTargets extends Activity {
 	 * rendering
 	 */
 	private native void setProjectionMatrix();
+	
+	
+    // Called from native to display a message
+    public void displayMessage(String text)
+    {
+    	// We use a handler because this thread cannot change the UI
+        Message message = new Message();
+        message.obj = text;
+        mainActivityHandler.sendMessage(message);
+    }
 
 	/** Called when the activity will start interacting with the user. */
 	protected void onResume() {
 		DebugLog.LOGD("ImageTargets::onResume");
 		super.onResume();
 
+		mainActivityHandler = new DisplayMessageHandler(getApplicationContext());
+        
 		// QCAR-specific resume operation
 		QCAR.onResume();
 
@@ -743,6 +775,10 @@ public class ImageTargets extends Activity {
 	public Texture getTexture(int i) {
 		return mTextures.elementAt(i);
 	}
+	
+	 public void tante() {
+	    	System.out.println("tante");
+	    }
 
 	/** A helper for loading native libraries stored in "libs/armeabi*". */
 	public static boolean loadLibrary(String nLibName) {

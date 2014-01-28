@@ -161,3 +161,5 @@ bool linePlaneIntersection(QCAR::Vec3F lineStart, QCAR::Vec3F lineEnd, QCAR::Vec
                            QCAR::Vec3F planeNormal, QCAR::Vec3F &intersection);
 
 unsigned long getCurrentTimeMS();
+
+void configureVideoBackground();
