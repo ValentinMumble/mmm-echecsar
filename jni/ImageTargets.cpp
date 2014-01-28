@@ -228,6 +228,7 @@ Java_mmm_EchecsAR_ImageTargets_onQCARInitializedNative(JNIEnv *, jobject)
 		bPieces[i].position.data[0] = x;
 		bPieces[i].position.data[1] = -y;
 
+		wPieces[i].id = bPieces[i].id = i;
 		wPieces[i].vertices = bPieces[i].vertices = vertices[i];
 		wPieces[i].normals = bPieces[i].normals = normals[i];
 		wPieces[i].texCoords = bPieces[i].texCoords = texCoords[i];
@@ -250,6 +251,7 @@ Java_mmm_EchecsAR_ImageTargets_onQCARInitializedNative(JNIEnv *, jobject)
 		bPieces[i].position.data[0] = x;
 		bPieces[i].position.data[1] = -y;
 
+		wPieces[i].id = bPieces[i].id = i;
 		wPieces[i].vertices = bPieces[i].vertices = pawnVertices;
 		wPieces[i].normals = bPieces[i].normals = pawnNormals;
 		wPieces[i].texCoords = bPieces[i].texCoords = pawnTexCoords;
