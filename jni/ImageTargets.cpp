@@ -594,7 +594,7 @@ void drawCells() {
 			if (cells[i][j].isAvailable) {
 				QCAR::Matrix44F modelViewProjection, transform;
 				transform = SampleMath::Matrix44FIdentity();
-				SampleUtils::translatePoseMatrix(x, y, -CELL_SIZE / 2, &transform.data[0]);
+				SampleUtils::translatePoseMatrix(x, y, 0, &transform.data[0]);
 				SampleUtils::scalePoseMatrix(cellScale, cellScale, cellScale, &transform.data[0]);
 				SampleUtils::multiplyMatrix(&modelViewMatrix.data[0], &transform.data[0], &transform.data[0]);
 				SampleUtils::multiplyMatrix(&projectionMatrix.data[0],
