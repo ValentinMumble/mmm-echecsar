@@ -216,11 +216,21 @@ Java_mmm_EchecsAR_ImageTargets_onQCARInitializedNative(JNIEnv *, jobject)
 	// Register the update callback where we handle the data set swap:
 	QCAR::registerCallback(&updateCallback);
 
-	// initialisation des positions
-
 	// initialisation des x et y a la case superieure gauche
-	int x = -SQUARE_SIZE * 4 + SQUARE_SIZE / 2;
-	int y = SQUARE_SIZE * 4 - SQUARE_SIZE / 2;
+	int x = -CELL_SIZE * 4 + CELL_SIZE / 2;
+	int y = CELL_SIZE * 4 - CELL_SIZE / 2;
+
+	// Initialisation des cells
+
+	for (int i = 0; i < N / 4; i++) {
+		for (int j = 0; j < N / 4; j++) {
+			cells[i][j].isAvailable = true;
+			cells[i][j].row = i;
+			cells[i][j].col = j;
+		}
+	}
+
+	// Initialisation des pieces
 
 	for (int i = 0; i < N / 4; i++) {
 		wPieces[i].position.data[0] = x;
@@ -236,15 +246,15 @@ Java_mmm_EchecsAR_ImageTargets_onQCARInitializedNative(JNIEnv *, jobject)
 		wPieces[i].textureId = 0;
 		bPieces[i].textureId = 1;
 
-		x += SQUARE_SIZE;
+		x += CELL_SIZE;
 
 		updatePieceTransform(&wPieces[i]);
 		updatePieceTransform(&bPieces[i]);
 	}
 
 	// Pawns
-	x = -SQUARE_SIZE * 4 + SQUARE_SIZE / 2;
-	y = SQUARE_SIZE * 3 - SQUARE_SIZE / 2;
+	x = -CELL_SIZE * 4 + CELL_SIZE / 2;
+	y = CELL_SIZE * 3 - CELL_SIZE / 2;
 	for (int i = 8; i < N / 2; i++) {
 		wPieces[i].position.data[0] = x;
 		wPieces[i].position.data[1] = y;
@@ -259,7 +269,7 @@ Java_mmm_EchecsAR_ImageTargets_onQCARInitializedNative(JNIEnv *, jobject)
 		wPieces[i].textureId = 0;
 		bPieces[i].textureId = 1;
 
-		x += SQUARE_SIZE;
+		x += CELL_SIZE;
 
 		updatePieceTransform(&wPieces[i]);
 		updatePieceTransform(&bPieces[i]);
@@ -311,6 +321,8 @@ Java_mmm_EchecsAR_ImageTargetsRenderer_renderFrame(JNIEnv *, jobject)
 		glUseProgram(shaderProgramID);
 		glActiveTexture(GL_TEXTURE0);
 		glUniform1i(texSampler2DHandle, 0 /*GL_TEXTURE0*/);
+
+		drawCells();
 
 		for (int i = 0; i < N / 2; i++) {
 			drawPiece(&wPieces[i]);
@@ -579,6 +591,40 @@ Java_mmm_EchecsAR_ImageTargetsRenderer_updateRendering(
 	configureVideoBackground();
 }
 
+void drawCells() {
+
+	int x = - 4 * CELL_SIZE + CELL_SIZE / 2;
+	for (int i = 0; i < N / 4; i++) {
+		int y = 4 * CELL_SIZE - CELL_SIZE / 2;
+		for (int j = 0; j < N / 4; j++) {
+			if (cells[i][j].isAvailable) {
+				QCAR::Matrix44F modelViewProjection, transform;
+				transform = SampleMath::Matrix44FIdentity();
+				SampleUtils::translatePoseMatrix(x, y, -CELL_SIZE / 2, &transform.data[0]);
+				SampleUtils::multiplyMatrix(&modelViewMatrix.data[0], &transform.data[0], &transform.data[0]);
+				SampleUtils::multiplyMatrix(&projectionMatrix.data[0],
+						&transform.data[0], &modelViewProjection.data[0]);
+
+				glVertexAttribPointer(vertexHandle, 2, GL_FLOAT, GL_FALSE, 0,
+						(const GLvoid*) cellVertices);
+				glVertexAttribPointer(textureCoordHandle, 2, GL_FLOAT, GL_FALSE, 0,
+						(const GLvoid*) cellTexCoords);
+				glEnableVertexAttribArray(vertexHandle);
+				glEnableVertexAttribArray(textureCoordHandle);
+
+				int textureId = 3;
+
+				glBindTexture(GL_TEXTURE_2D, textures[textureId]->mTextureID);
+				glUniformMatrix4fv(mvpMatrixHandle, 1, GL_FALSE,
+						(GLfloat*) &modelViewProjection.data[0]);
+				glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
+			}
+			y -= CELL_SIZE;
+		}
+		x += CELL_SIZE;
+	}
+
+}
 
 void drawPiece(Piece *piece) {
 	QCAR::Matrix44F modelViewProjection, objectMatrix;
@@ -630,17 +676,17 @@ void handleTouches() {
 		Piece* selected = NULL;
 
 		if (intersection.data[0] < 0) {
-			intersection.data[0] = floor(intersection.data[0] / SQUARE_SIZE) * SQUARE_SIZE + SQUARE_SIZE / 2;
+			intersection.data[0] = floor(intersection.data[0] / CELL_SIZE) * CELL_SIZE + CELL_SIZE / 2;
 		} else {
-			intersection.data[0] = ceil(intersection.data[0] / SQUARE_SIZE) * SQUARE_SIZE - SQUARE_SIZE / 2;
+			intersection.data[0] = ceil(intersection.data[0] / CELL_SIZE) * CELL_SIZE - CELL_SIZE / 2;
 		}
 		if (intersection.data[1] < 0) {
-			intersection.data[1] = floor(intersection.data[1] / SQUARE_SIZE) * SQUARE_SIZE + SQUARE_SIZE / 2;
+			intersection.data[1] = floor(intersection.data[1] / CELL_SIZE) * CELL_SIZE + CELL_SIZE / 2;
 		} else {
-			intersection.data[1] = ceil(intersection.data[1] / SQUARE_SIZE) * SQUARE_SIZE - SQUARE_SIZE / 2;
+			intersection.data[1] = ceil(intersection.data[1] / CELL_SIZE) * CELL_SIZE - CELL_SIZE / 2;
 		}
 
-		// For each domino, check for intersection with the touch
+		// For each piece, check for intersection with the touch
 		for (int i = 0; i < N / 2; i++) {
 			// Check the white pieces
 			piece = &wPieces[i];
@@ -663,7 +709,7 @@ void handleTouches() {
 			// TODO: chess rules
 			bool isMoveAllowed = true;
 
-		    JNIEnv *env;
+			JNIEnv *env;
 			javaVM->AttachCurrentThread(&env, NULL);
 			jstring js = env->NewStringUTF("non");
 

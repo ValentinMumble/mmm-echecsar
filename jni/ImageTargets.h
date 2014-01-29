@@ -41,7 +41,7 @@
 extern "C" {
 #endif
 
-#define SQUARE_SIZE 92
+#define CELL_SIZE 92
 #define N 32
 
 #define LROOK 0
@@ -89,10 +89,14 @@ typedef struct _TouchEvent {
     bool didTap;
 } TouchEvent;
 
+typedef struct _Cell {
+	bool isAvailable;
+	int row;
+	int col;
+} Cell;
 
 typedef struct _Piece {
     int id;
-    int state;
 
     QCAR::Vec2F position;
     QCAR::Matrix44F transform;
@@ -102,8 +106,19 @@ typedef struct _Piece {
     int numVertices;
     int textureId;
 
-    int restingFrameCount;
 } Piece;
+
+float cellVertices[] = {
+        -CELL_SIZE / 2, -CELL_SIZE / 2,
+        CELL_SIZE / 2, -CELL_SIZE / 2,
+        -CELL_SIZE / 2, CELL_SIZE / 2,
+        CELL_SIZE / 2, CELL_SIZE / 2};
+
+float cellTexCoords[] = {
+        0, 0,
+        1, 0,
+        1, 1,
+        0, 1};
 
 float* vertices[N / 4] = {rookVertices, knightVertices, bishopVertices, queenVertices, kingVertices, bishopVertices, knightVertices, rookVertices};
 float* normals[N / 4] = {rookNormals, knightNormals, bishopNormals, queenNormals, kingNormals, bishopNormals, knightNormals, rookNormals};
@@ -147,6 +162,10 @@ TouchEvent touch1, touch2;
 Piece wPieces[N / 2], bPieces[N / 2];
 
 Piece* selectedPiece;
+
+Cell cells[N / 4][N / 4];
+
+void drawCells();
 
 void drawPiece(Piece *);
 
