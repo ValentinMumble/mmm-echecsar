@@ -388,27 +388,6 @@ public class ImageTargets extends Activity {
 	 * rendering
 	 */
 	private native void setProjectionMatrix();
-	
-	
-    // Called from native to display a message
-    public void displayMessage(String text)
-    {
-    	// We use a handler because this thread cannot change the UI
-        Message message = new Message();
-        message.obj = text;
-        mainActivityHandler.sendMessage(message);
-    }
-    
-    public String mouvementsPossibles(int row, int col) {
-    	List<Coord> mouvs = ech.mouvementPossibles(new Coord(row + 1, col + 1));
-    	String res = "";
-    	if (mouvs != null) {
-	    	for (Coord c : mouvs) {
-	    		res += c.toString() + ";";
-	    	}
-    	}
-    	return res;
-    }
 
 	/** Called when the activity will start interacting with the user. */
 	protected void onResume() {
@@ -1018,4 +997,36 @@ public class ImageTargets extends Activity {
 		cameraOptionsDialog = cameraOptionsDialogBuilder.create();
 		cameraOptionsDialog.show();
 	}
+	
+	// Called from native to display a message
+    public void displayMessage(String text)
+    {
+    	// We use a handler because this thread cannot change the UI
+        Message message = new Message();
+        message.obj = text;
+        mainActivityHandler.sendMessage(message);
+    }
+    
+    public String mouvementsPossibles(int row, int col) {
+    	List<Coord> mouvs = ech.mouvementPossibles(new Coord(row + 1, col + 1));
+    	String res = "";
+    	if (mouvs != null) {
+	    	for (Coord c : mouvs) {
+	    		res += c.toString() + ";";
+	    	}
+    	}
+    	return res;
+    }
+    
+    public boolean move(int fromrow, int fromcol, int torow, int tocol) {
+    	Coord from = new Coord(fromrow + 1, fromcol + 1);
+    	Coord to = new Coord(torow + 1, tocol + 1);
+    	List<Coord> mouvs = ech.mouvementPossibles(from);
+    	if (mouvs != null && mouvs.contains(to)) {
+    		ech.deplacerPiece(from, to);
+    		return true;
+    	} else {
+    		return false;
+    	}
+    }
 }

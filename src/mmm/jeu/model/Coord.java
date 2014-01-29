@@ -23,7 +23,22 @@ public class Coord {
 		return y;
 	}
 	
+	@Override
 	public String toString(){
 		return x + "," + y;
+	}
+	
+	@Override
+	public boolean equals(Object o) {
+		if (this == o)
+	        return true;
+	    if (o == null)
+	        return false;
+	    if (getClass() != o.getClass())
+	        return false;
+	    final Coord other = (Coord) o;
+	    if (x != other.getX() || y != other.getY())
+	        return false;
+	    return true;
 	}
 }

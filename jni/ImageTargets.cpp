@@ -705,13 +705,23 @@ void handleTouches() {
 			// If selected is NULL, this will deselect the currently selected piece
 			// If selectedPiece is not NULL, the piece will be moved
 			// TODO: chess rules
-			bool isMoveAllowed = true;
 
-			if (selectedPiece != NULL && isMoveAllowed) {
-				// Deplacement de la piece
-				selectedPiece->position.data[0] = intersection.data[0];
-				selectedPiece->position.data[1] = intersection.data[1];
-				updatePieceTransform(selectedPiece);
+			if (selectedPiece != NULL) {
+				int fromcol = floor(selectedPiece->position.data[0] / CELL_SIZE + 4);
+				int fromrow = N / 4 - ceil(selectedPiece->position.data[1] / CELL_SIZE + 4);
+
+				JNIEnv *env;
+				javaVM->AttachCurrentThread(&env, NULL);
+				jmethodID method = env->GetMethodID(activityClass, "move", "(IIII)Z");
+				jboolean move = (jboolean) env->CallBooleanMethod(activityObj, method, fromrow, fromcol, row, col);
+				bool isMoveAllowed = (bool) move;
+
+				if (isMoveAllowed) {
+					// Deplacement de la piece
+					selectedPiece->position.data[0] = intersection.data[0];
+					selectedPiece->position.data[1] = intersection.data[1];
+					updatePieceTransform(selectedPiece);
+				}
 			}
 
 			selectedPiece = NULL;
