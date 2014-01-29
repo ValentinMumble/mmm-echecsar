@@ -728,6 +728,7 @@ void handleTouches() {
 	}
 }
 
+// TODO: Clean that shit up
 void showAvailableCells(int row, int col) {
 	resetCells();
 	JNIEnv *env;
@@ -736,14 +737,12 @@ void showAvailableCells(int row, int col) {
 	jstring cellstr = (jstring) env->CallObjectMethod(activityObj, method, row, col);
 	jboolean iscopy;
 	const char *str = env->GetStringUTFChars(cellstr, &iscopy);
-
 	std::string s = str;
 	std::string delimiter = ";";
 	size_t pos = 0;
 	std::string coord;
 	while ((pos = s.find(delimiter)) != std::string::npos) {
 		coord = s.substr(0, pos);
-
 		s.erase(0, pos + delimiter.length());
 		std::vector<int> vect;
 		std::stringstream ss(coord);

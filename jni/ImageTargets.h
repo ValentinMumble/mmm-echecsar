@@ -152,7 +152,7 @@ QCAR::Matrix44F inverseProjMatrix;
 
 // Constants:
 static const float pieceScale = 60.0f;
-static const float cellScale = 1f;
+static const float cellScale = 1.0f;
 
 QCAR::DataSet* dataSetCheckerboard = 0;
 
