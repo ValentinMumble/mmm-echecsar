@@ -222,13 +222,7 @@ Java_mmm_EchecsAR_ImageTargets_onQCARInitializedNative(JNIEnv *, jobject)
 
 	// Initialisation des cells
 
-	for (int i = 0; i < N / 4; i++) {
-		for (int j = 0; j < N / 4; j++) {
-			cells[i][j].isAvailable = true;
-			cells[i][j].row = i;
-			cells[i][j].col = j;
-		}
-	}
+	resetCells();
 
 	// Initialisation des pieces
 
@@ -601,6 +595,7 @@ void drawCells() {
 				QCAR::Matrix44F modelViewProjection, transform;
 				transform = SampleMath::Matrix44FIdentity();
 				SampleUtils::translatePoseMatrix(x, y, -CELL_SIZE / 2, &transform.data[0]);
+				SampleUtils::scalePoseMatrix(cellScale, cellScale, cellScale, &transform.data[0]);
 				SampleUtils::multiplyMatrix(&modelViewMatrix.data[0], &transform.data[0], &transform.data[0]);
 				SampleUtils::multiplyMatrix(&projectionMatrix.data[0],
 						&transform.data[0], &modelViewProjection.data[0]);
@@ -660,7 +655,7 @@ void updatePieceTransform(Piece *piece) {
 	piece->transform = SampleMath::Matrix44FIdentity();
 	float* transformPtr = &piece->transform.data[0];
 	SampleUtils::translatePoseMatrix(piece->position.data[0], piece->position.data[1], 0, transformPtr);
-	SampleUtils::scalePoseMatrix(kPieceScale, kPieceScale, kPieceScale, transformPtr);
+	SampleUtils::scalePoseMatrix(pieceScale, pieceScale, pieceScale, transformPtr);
 }
 
 void handleTouches() {
@@ -686,6 +681,9 @@ void handleTouches() {
 			intersection.data[1] = ceil(intersection.data[1] / CELL_SIZE) * CELL_SIZE - CELL_SIZE / 2;
 		}
 
+		int col = floor(intersection.data[0] / CELL_SIZE + 4);
+		int row = N / 4 - ceil(intersection.data[1] / CELL_SIZE + 4);
+
 		// For each piece, check for intersection with the touch
 		for (int i = 0; i < N / 2; i++) {
 			// Check the white pieces
@@ -709,29 +707,65 @@ void handleTouches() {
 			// TODO: chess rules
 			bool isMoveAllowed = true;
 
-			JNIEnv *env;
-			javaVM->AttachCurrentThread(&env, NULL);
-			jstring js = env->NewStringUTF("non");
-
 			if (selectedPiece != NULL && isMoveAllowed) {
+				// Deplacement de la piece
 				selectedPiece->position.data[0] = intersection.data[0];
 				selectedPiece->position.data[1] = intersection.data[1];
 				updatePieceTransform(selectedPiece);
-				js = env->NewStringUTF("oui");
 			}
 
-			jmethodID method = env->GetMethodID(activityClass, "displayMessage", "(Ljava/lang/String;)V");
-			env->CallVoidMethod(activityObj, method, js);
-
 			selectedPiece = NULL;
+			resetCells();
 		} else {
 			// If selected is not NULL, this will select a new piece
 			selectedPiece = selected;
+			showAvailableCells(row, col);
 		}
 
 		// Store the timestamp for this tap so we know we've handled it
 		lastTapTime = touch1.startTime;
 
+	}
+}
+
+void showAvailableCells(int row, int col) {
+	resetCells();
+	JNIEnv *env;
+	javaVM->AttachCurrentThread(&env, NULL);
+	jmethodID method = env->GetMethodID(activityClass, "mouvementsPossibles", "(II)Ljava/lang/String;");
+	jstring cellstr = (jstring) env->CallObjectMethod(activityObj, method, row, col);
+	jboolean iscopy;
+	const char *str = env->GetStringUTFChars(cellstr, &iscopy);
+
+	std::string s = str;
+	std::string delimiter = ";";
+	size_t pos = 0;
+	std::string coord;
+	while ((pos = s.find(delimiter)) != std::string::npos) {
+		coord = s.substr(0, pos);
+
+		s.erase(0, pos + delimiter.length());
+		std::vector<int> vect;
+		std::stringstream ss(coord);
+		int i;
+		while (ss >> i) {
+			vect.push_back(i);
+			if (ss.peek() == ',')
+			ss.ignore();
+		}
+		int x = vect.at(1) - 1;
+		int y = vect.at(0) - 1;
+		cells[x][y].isAvailable = true;
+	}
+}
+
+void resetCells() {
+	for (int i = 0; i < N / 4; i++) {
+		for (int j = 0; j < N / 4; j++) {
+			cells[i][j].isAvailable = false;
+			cells[i][j].row = i;
+			cells[i][j].col = j;
+		}
 	}
 }
 

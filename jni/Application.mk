@@ -28,3 +28,6 @@ APP_PLATFORM := android-8
 # the code difficult, stack traces may not be reliable, etc... 
 
 # APP_OPTIM := release OR debug
+
+APP_STL := stlport_static
+

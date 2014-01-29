@@ -14,8 +14,12 @@ package mmm.EchecsAR;
 
 import java.lang.ref.WeakReference;
 import java.lang.reflect.Field;
+import java.util.List;
 import java.util.Vector;
 
+import mmm.jeu.control.CEchiquier;
+import mmm.jeu.control.ICEchiquier;
+import mmm.jeu.model.Coord;
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.content.Context;
@@ -117,6 +121,8 @@ public class ImageTargets extends Activity {
 	MenuItem mDataSetMenuItem = null;
 
 	private RelativeLayout mUILayout;
+	
+	private ICEchiquier ech;
 
 	/** Static initializer block to load native libraries on start-up. */
 	static {
@@ -308,7 +314,6 @@ public class ImageTargets extends Activity {
 	protected void onCreate(Bundle savedInstanceState) {
 		DebugLog.LOGD("ImageTargets::onCreate");
 		super.onCreate(savedInstanceState);
-
 		// Load any sample specific textures:
 		mTextures = new Vector<Texture>();
 		loadTextures();
@@ -321,6 +326,8 @@ public class ImageTargets extends Activity {
 
 		// Update the application status to start initializing application:
 		updateApplicationStatus(APPSTATUS_INIT_APP);
+		
+		ech = new CEchiquier();
 	}
 
 	/**
@@ -390,6 +397,17 @@ public class ImageTargets extends Activity {
         Message message = new Message();
         message.obj = text;
         mainActivityHandler.sendMessage(message);
+    }
+    
+    public String mouvementsPossibles(int row, int col) {
+    	List<Coord> mouvs = ech.mouvementPossibles(new Coord(row + 1, col + 1));
+    	String res = "";
+    	if (mouvs != null) {
+	    	for (Coord c : mouvs) {
+	    		res += c.toString() + ";";
+	    	}
+    	}
+    	return res;
     }
 
 	/** Called when the activity will start interacting with the user. */

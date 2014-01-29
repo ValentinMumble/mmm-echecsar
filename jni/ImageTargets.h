@@ -1,10 +1,12 @@
 #include <cstdlib>
 #include <time.h>
+#include <sstream>
+#include <vector>
 
 #include <jni.h>
 #include <android/log.h>
 #include <stdio.h>
-#include <string.h>
+#include <string>
 #include <assert.h>
 #include <math.h>
 
@@ -149,7 +151,8 @@ QCAR::Matrix44F projectionMatrix, modelViewMatrix;
 QCAR::Matrix44F inverseProjMatrix;
 
 // Constants:
-static const float kPieceScale = 60.0f;
+static const float pieceScale = 60.0f;
+static const float cellScale = 1f;
 
 QCAR::DataSet* dataSetCheckerboard = 0;
 
@@ -172,6 +175,10 @@ void drawPiece(Piece *);
 void updatePieceTransform(Piece *);
 
 void handleTouches();
+
+void showAvailableCells(int, int);
+
+void resetCells();
 
 void projectScreenPointToPlane(QCAR::Vec2F point, QCAR::Vec3F planeCenter, QCAR::Vec3F planeNormal,
                                QCAR::Vec3F &intersection, QCAR::Vec3F &lineStart, QCAR::Vec3F &lineEnd);
