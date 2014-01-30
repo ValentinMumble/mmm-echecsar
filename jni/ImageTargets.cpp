@@ -644,10 +644,8 @@ void drawPiece(Piece *piece) {
 
 void updatePieceTransform(Piece *piece) {
 
-	float x = (piece->col - 4) * CELL_SIZE;
-	float y = (8 - piece->row - 4) * CELL_SIZE;
-
-	LOG("x : %f", x);
+	float x = (piece->col - 4) * CELL_SIZE + CELL_SIZE / 2;
+	float y = (8 - piece->row - 4) * CELL_SIZE - CELL_SIZE / 2;
 
 	// Reset the piece transform to the identity matrix
 	piece->transform = SampleMath::Matrix44FIdentity();
