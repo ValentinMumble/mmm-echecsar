@@ -10,7 +10,9 @@ public interface IPiece {
 	char getColor();
 	String getType();
 	boolean getDejaBouge();
-	ArrayList<Coord> mouvementPossibles();
+	//ArrayList<Coord> mouvementPossibles();
 	void deplacer(Coord target);
+	
+	String getDraw();
 	
 }

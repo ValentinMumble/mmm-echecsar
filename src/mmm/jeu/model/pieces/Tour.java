@@ -13,7 +13,7 @@ public class Tour extends Piece implements ITour {
 		this.type = ToolsModel.tour;
 	}
 	
-	@Override
+	/*@Override
 	public ArrayList<Coord> mouvementPossibles(){
 		
 		ArrayList<Coord> mvt = new ArrayList<Coord>();
@@ -22,5 +22,5 @@ public class Tour extends Piece implements ITour {
 		
 		 
 		return mvt;
-	}
+	}*/
 }

@@ -14,6 +14,14 @@ public class Coord {
 		this.x = copie.getX();
 		this.y = copie.getY();
 	}
+	
+	public Coord(String coordString){
+		
+		String[] kk = coordString.split(",");
+		
+		this.x = Integer.parseInt(kk[0]);
+		this.y = Integer.parseInt(kk[1]);
+	}
 
 	public int getX() {
 		return x;

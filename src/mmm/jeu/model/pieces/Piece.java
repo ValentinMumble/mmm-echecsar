@@ -34,10 +34,10 @@ public class Piece implements IPiece {
 		return dejaBouge;
 	}
 
-	@Override
+	/*@Override
 	public ArrayList<Coord> mouvementPossibles() {
 		return null;
-	}
+	}*/
 
 	@Override
 	public void deplacer(Coord target) {
@@ -51,5 +51,12 @@ public class Piece implements IPiece {
 	
 	private void actionSpeciale()
 	{dejaBouge = true;}
+
+	@Override
+	public String getDraw() {
+		return type.charAt(0)+""+type.charAt(1)+""+color;
+	}
+	
+	
 
 }
