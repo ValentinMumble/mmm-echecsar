@@ -298,6 +298,8 @@ public class CEchiquier implements ICEchiquier {
 		
 		etatPlateau.remove(pieceMove.getCoord().toString());
 		pieceMove.deplacer(positionArrivee);
+		if (isOccuped(positionArrivee))
+			etatPlateau.remove(positionArrivee.toString());
 		etatPlateau.put(pieceMove.getCoord().toString(), pieceMove);
 		
 		if (testPetitRock(pieceMove, positionDepart, positionArrivee)){
