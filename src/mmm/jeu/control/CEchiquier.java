@@ -303,7 +303,7 @@ public class CEchiquier implements ICEchiquier {
 		etatPlateau.put(pieceMove.getCoord().toString(), pieceMove);
 		
 		if (testPetitRock(pieceMove, positionDepart, positionArrivee)){
-			
+			 
 		}
 		else if (testGrandRock(pieceMove, positionDepart, positionArrivee)){
 			
