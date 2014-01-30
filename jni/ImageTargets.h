@@ -148,8 +148,7 @@ unsigned int screenHeight = 0;
 bool isActivityInPortraitMode = false;
 
 // The projection matrix used for rendering virtual objects:
-QCAR::Matrix44F projectionMatrix, modelViewMatrix;
-QCAR::Matrix44F inverseProjMatrix;
+QCAR::Matrix44F projectionMatrix, modelViewMatrix, inverseProjMatrix;
 
 // Constants:
 static const float pieceScale = 60.0f;
@@ -169,6 +168,10 @@ Piece* selectedPiece;
 
 Cell cells[N / 4][N / 4];
 
+void initBoard();
+
+void resetCells();
+
 void drawCells();
 
 void drawPieces();
@@ -182,8 +185,6 @@ void updatePieceTransform(Piece *);
 void handleTouches();
 
 void showAvailableCells(int, int);
-
-void resetCells();
 
 void projectScreenPointToPlane(QCAR::Vec2F point, QCAR::Vec3F planeCenter, QCAR::Vec3F planeNormal,
                                QCAR::Vec3F &intersection, QCAR::Vec3F &lineStart, QCAR::Vec3F &lineEnd);

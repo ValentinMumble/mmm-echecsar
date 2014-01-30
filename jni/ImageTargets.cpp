@@ -213,50 +213,7 @@ Java_mmm_EchecsAR_ImageTargets_onQCARInitializedNative(JNIEnv *, jobject)
 	// Register the update callback where we handle the data set swap:
 	QCAR::registerCallback(&updateCallback);
 
-	// Initialisation des cells
-
-	resetCells();
-
-	// Initialisation des pieces
-
-	for (int i = 0; i < 8; i++) {
-		wPieces[i].col = i;
-		wPieces[i].row = 0;
-		bPieces[i].col = i;
-		bPieces[i].row = 7;
-
-		wPieces[i].id = bPieces[i].id = i;
-		wPieces[i].isAlive = bPieces[i].isAlive = true;
-		wPieces[i].vertices = bPieces[i].vertices = vertices[i];
-		wPieces[i].normals = bPieces[i].normals = normals[i];
-		wPieces[i].texCoords = bPieces[i].texCoords = texCoords[i];
-		wPieces[i].numVertices = bPieces[i].numVertices = numVertices[i];
-		wPieces[i].textureId = 0;
-		bPieces[i].textureId = 1;
-
-		updatePieceTransform(&wPieces[i]);
-		updatePieceTransform(&bPieces[i]);
-	}
-
-	// PAWNS
-	for (int i = 8; i < N / 2; i++) {
-		wPieces[i].col = i - 8;
-		wPieces[i].row = 1;
-		bPieces[i].col = i - 8;
-		bPieces[i].row = 6;
-
-		wPieces[i].id = bPieces[i].id = i;
-		wPieces[i].isAlive = bPieces[i].isAlive = true;
-		wPieces[i].vertices = bPieces[i].vertices = pawnVertices;
-		wPieces[i].normals = bPieces[i].normals = pawnNormals;
-		wPieces[i].texCoords = bPieces[i].texCoords = pawnTexCoords;
-		wPieces[i].numVertices = bPieces[i].numVertices = pawnNumVertices;
-		wPieces[i].textureId = 0;
-		bPieces[i].textureId = 1;
-
-		updatePieceTransform(&wPieces[i]);
-		updatePieceTransform(&bPieces[i]);
-	}
+	initBoard();
 
 	// Comment in to enable tracking of up to 2 targets simultaneously and
 	// split the work over multiple frames:
@@ -571,8 +528,62 @@ Java_mmm_EchecsAR_ImageTargetsRenderer_updateRendering(
 	configureVideoBackground();
 }
 
-void drawCells() {
+void initBoard() {
+	// Initialisation des cells
+	resetCells();
 
+	// Initialisation des pieces
+	for (int i = 0; i < 8; i++) {
+		wPieces[i].col = i;
+		wPieces[i].row = 0;
+		bPieces[i].col = i;
+		bPieces[i].row = 7;
+
+		wPieces[i].id = bPieces[i].id = i;
+		wPieces[i].isAlive = bPieces[i].isAlive = true;
+		wPieces[i].vertices = bPieces[i].vertices = vertices[i];
+		wPieces[i].normals = bPieces[i].normals = normals[i];
+		wPieces[i].texCoords = bPieces[i].texCoords = texCoords[i];
+		wPieces[i].numVertices = bPieces[i].numVertices = numVertices[i];
+		wPieces[i].textureId = 0;
+		bPieces[i].textureId = 1;
+
+		updatePieceTransform(&wPieces[i]);
+		updatePieceTransform(&bPieces[i]);
+	}
+
+	// PAWNS
+	for (int i = 8; i < N / 2; i++) {
+		wPieces[i].col = i - 8;
+		wPieces[i].row = 1;
+		bPieces[i].col = i - 8;
+		bPieces[i].row = 6;
+
+		wPieces[i].id = bPieces[i].id = i;
+		wPieces[i].isAlive = bPieces[i].isAlive = true;
+		wPieces[i].vertices = bPieces[i].vertices = pawnVertices;
+		wPieces[i].normals = bPieces[i].normals = pawnNormals;
+		wPieces[i].texCoords = bPieces[i].texCoords = pawnTexCoords;
+		wPieces[i].numVertices = bPieces[i].numVertices = pawnNumVertices;
+		wPieces[i].textureId = 0;
+		bPieces[i].textureId = 1;
+
+		updatePieceTransform(&wPieces[i]);
+		updatePieceTransform(&bPieces[i]);
+	}
+}
+
+void resetCells() {
+	for (int i = 0; i < N / 4; i++) {
+		for (int j = 0; j < N / 4; j++) {
+			cells[i][j].isAvailable = false;
+			cells[i][j].row = i;
+			cells[i][j].col = j;
+		}
+	}
+}
+
+void drawCells() {
 	int x = - 4 * CELL_SIZE + CELL_SIZE / 2;
 	for (int i = 0; i < N / 4; i++) {
 		int y = 4 * CELL_SIZE - CELL_SIZE / 2;
@@ -687,17 +698,6 @@ void handleTouches() {
 		Piece* piece;
 		Piece* selected = NULL;
 
-		if (intersection.data[0] < 0) {
-			intersection.data[0] = floor(intersection.data[0] / CELL_SIZE) * CELL_SIZE + CELL_SIZE / 2;
-		} else {
-			intersection.data[0] = ceil(intersection.data[0] / CELL_SIZE) * CELL_SIZE - CELL_SIZE / 2;
-		}
-		if (intersection.data[1] < 0) {
-			intersection.data[1] = floor(intersection.data[1] / CELL_SIZE) * CELL_SIZE + CELL_SIZE / 2;
-		} else {
-			intersection.data[1] = ceil(intersection.data[1] / CELL_SIZE) * CELL_SIZE - CELL_SIZE / 2;
-		}
-
 		int col = floor(intersection.data[0] / CELL_SIZE + 4);
 		int row = N / 4 - ceil(intersection.data[1] / CELL_SIZE + 4);
 
@@ -764,22 +764,11 @@ void showAvailableCells(int row, int col) {
 		int i;
 		while (ss >> i) {
 			vect.push_back(i);
-			if (ss.peek() == ',')
-			ss.ignore();
+			if (ss.peek() == ',') ss.ignore();
 		}
 		int x = vect.at(1) - 1;
 		int y = vect.at(0) - 1;
 		cells[x][y].isAvailable = true;
-	}
-}
-
-void resetCells() {
-	for (int i = 0; i < N / 4; i++) {
-		for (int j = 0; j < N / 4; j++) {
-			cells[i][j].isAvailable = false;
-			cells[i][j].row = i;
-			cells[i][j].col = j;
-		}
 	}
 }
 
