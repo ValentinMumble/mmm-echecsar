@@ -14,8 +14,7 @@ class ImageTargets_UpdateCallback: public QCAR::UpdateCallback {
 							QCAR::Tracker::IMAGE_TRACKER));
 			if (imageTracker == 0 || dataSetCheckerboard == 0
 					|| imageTracker->getActiveDataSet() == 0) {
-				LOG("Failed to switch data set.");
-				return;
+				LOG("Failed to switch data set.");return;
 			}
 			imageTracker->activateDataSet(dataSetCheckerboard);
 		}
@@ -45,27 +44,28 @@ Java_mmm_EchecsAR_ImageTargets_switchDatasetAsap(JNIEnv *, jobject)
 JNIEXPORT int JNICALL
 Java_mmm_EchecsAR_ImageTargets_initTracker(JNIEnv *, jobject)
 {
-	LOG("Java_mmm_EchecsAR_ImageTargets_initTracker");
+	LOG(
+			"Java_mmm_EchecsAR_ImageTargets_initTracker");
 
-	// Initialize the image tracker:
+// Initialize the image tracker:
 	QCAR::TrackerManager& trackerManager = QCAR::TrackerManager::getInstance();
 	QCAR::Tracker* tracker = trackerManager.initTracker(QCAR::Tracker::IMAGE_TRACKER);
 	if (tracker == NULL)
 	{
-		LOG("Failed to initialize ImageTracker.");
-		return 0;
+		LOG("Failed to initialize ImageTracker.");return 0;
 	}
 
-	LOG("Successfully initialized ImageTracker.");
-	return 1;
+	LOG(
+			"Successfully initialized ImageTracker.");return 1;
 }
 
 JNIEXPORT void JNICALL
 Java_mmm_EchecsAR_ImageTargets_deinitTracker(JNIEnv *, jobject)
 {
-	LOG("Java_mmm_EchecsAR_ImageTargets_deinitTracker");
+	LOG(
+			"Java_mmm_EchecsAR_ImageTargets_deinitTracker");
 
-	// Deinit the image tracker:
+// Deinit the image tracker:
 	QCAR::TrackerManager& trackerManager = QCAR::TrackerManager::getInstance();
 	trackerManager.deinitTracker(QCAR::Tracker::IMAGE_TRACKER);
 }
@@ -75,56 +75,54 @@ Java_mmm_EchecsAR_ImageTargets_loadTrackerData(JNIEnv *, jobject)
 {
 	LOG("Java_mmm_EchecsAR_ImageTargets_loadTrackerData");
 
-	// Get the image tracker:
+// Get the image tracker:
 	QCAR::TrackerManager& trackerManager = QCAR::TrackerManager::getInstance();
 	QCAR::ImageTracker* imageTracker = static_cast<QCAR::ImageTracker*>(
 			trackerManager.getTracker(QCAR::Tracker::IMAGE_TRACKER));
 	if (imageTracker == NULL)
 	{
-		LOG("Failed to load tracking data set because the ImageTracker has not"
-				" been initialized.");
-		return 0;
+		LOG(
+				"Failed to load tracking data set because the ImageTracker has not" " been initialized.");return 0;
 	}
 
 	// Create the data sets
 	dataSetCheckerboard = imageTracker->createDataSet();
 	if (dataSetCheckerboard == 0)
 	{
-		LOG("Failed to create a new tracking data.");
-		return 0;
+		LOG(
+				"Failed to create a new tracking data.");return 0;
 	}
 
 	if (!dataSetCheckerboard->load("checkerboard.xml", QCAR::DataSet::STORAGE_APPRESOURCE))
 	{
-		LOG("Failed to load data set.");
-		return 0;
+		LOG(
+				"Failed to load data set.");return 0;
 	}
 
 	// Activate the data set:
 	if (!imageTracker->activateDataSet(dataSetCheckerboard))
 	{
-		LOG("Failed to activate data set.");
-		return 0;
+		LOG("Failed to activate data set.");return 0;
 	}
 
-	LOG("Successfully loaded and activated data set.");
-	return 1;
+	LOG(
+			"Successfully loaded and activated data set.");return 1;
 }
 
 JNIEXPORT int JNICALL
 Java_mmm_EchecsAR_ImageTargets_destroyTrackerData(JNIEnv *, jobject)
 {
-	LOG("Java_mmm_EchecsAR_ImageTargets_destroyTrackerData");
+	LOG(
+			"Java_mmm_EchecsAR_ImageTargets_destroyTrackerData");
 
-	// Get the image tracker:
+// Get the image tracker:
 	QCAR::TrackerManager& trackerManager = QCAR::TrackerManager::getInstance();
 	QCAR::ImageTracker* imageTracker = static_cast<QCAR::ImageTracker*>(
 			trackerManager.getTracker(QCAR::Tracker::IMAGE_TRACKER));
 	if (imageTracker == NULL)
 	{
-		LOG("Failed to destroy the tracking data set because the ImageTracker has not"
-				" been initialized.");
-		return 0;
+		LOG(
+				"Failed to destroy the tracking data set because the ImageTracker has not" " been initialized.");return 0;
 	}
 
 	if (dataSetCheckerboard != 0)
@@ -132,19 +130,18 @@ Java_mmm_EchecsAR_ImageTargets_destroyTrackerData(JNIEnv *, jobject)
 		if (imageTracker->getActiveDataSet() == dataSetCheckerboard &&
 				!imageTracker->deactivateDataSet(dataSetCheckerboard))
 		{
-			LOG("Failed to destroy the tracking data set Checkerboard because the data set "
-					"could not be deactivated.");
-			return 0;
+			LOG(
+					"Failed to destroy the tracking data set Checkerboard because the data set " "could not be deactivated.");return 0;
 		}
 
 		if (!imageTracker->destroyDataSet(dataSetCheckerboard))
 		{
-			LOG("Failed to destroy the tracking data set Checkerboard.");
-			return 0;
+			LOG(
+					"Failed to destroy the tracking data set Checkerboard.");return 0;
 		}
 
-		LOG("Successfully destroyed the data set Checkerboard.");
-		dataSetCheckerboard = 0;
+		LOG(
+				"Successfully destroyed the data set Checkerboard.");dataSetCheckerboard = 0;
 	}
 
 	return 1;
@@ -309,11 +306,7 @@ Java_mmm_EchecsAR_ImageTargetsRenderer_renderFrame(JNIEnv *, jobject)
 		glUniform1i(texSampler2DHandle, 0 /*GL_TEXTURE0*/);
 
 		drawCells();
-
-		for (int i = 0; i < N / 2; i++) {
-			drawPiece(&wPieces[i]);
-			drawPiece(&bPieces[i]);
-		}
+		drawPieces();
 
 		glDisableVertexAttribArray(vertexHandle);
 		glDisableVertexAttribArray(normalHandle);
@@ -335,9 +328,10 @@ JNIEXPORT void JNICALL
 Java_mmm_EchecsAR_ImageTargets_initApplicationNative(
 		JNIEnv* env, jobject obj, jint width, jint height)
 {
-	LOG("Java_mmm_EchecsAR_ImageTargets_initApplicationNative");
+	LOG(
+			"Java_mmm_EchecsAR_ImageTargets_initApplicationNative");
 
-	// Store screen dimensions
+// Store screen dimensions
 	screenWidth = width;
 	screenHeight = height;
 
@@ -350,16 +344,15 @@ Java_mmm_EchecsAR_ImageTargets_initApplicationNative(
 			"getTextureCount", "()I");
 	if (getTextureCountMethodID == 0)
 	{
-		LOG("Function getTextureCount() not found.");
-		return;
+		LOG("Function getTextureCount() not found.");return;
 	}
 
 	textureCount = env->CallIntMethod(obj, getTextureCountMethodID);
 
 	if (!textureCount)
 	{
-		LOG("getTextureCount() returned zero.");
-		return;
+		LOG(
+				"getTextureCount() returned zero.");return;
 	}
 
 	textures = new Texture*[textureCount];
@@ -369,8 +362,8 @@ Java_mmm_EchecsAR_ImageTargets_initApplicationNative(
 
 	if (getTextureMethodID == 0)
 	{
-		LOG("Function getTexture() not found.");
-		return;
+		LOG(
+				"Function getTexture() not found.");return;
 	}
 
 	// Register the textures
@@ -380,22 +373,23 @@ Java_mmm_EchecsAR_ImageTargets_initApplicationNative(
 		jobject textureObject = env->CallObjectMethod(obj, getTextureMethodID, i);
 		if (textureObject == NULL)
 		{
-			LOG("GetTexture() returned zero pointer");
-			return;
+			LOG(
+					"GetTexture() returned zero pointer");return;
 		}
 
 		textures[i] = Texture::create(env, textureObject);
 	}
-	LOG("Java_mmm_EchecsAR_ImageTargets_initApplicationNative finished");
-}
+	LOG(
+			"Java_mmm_EchecsAR_ImageTargets_initApplicationNative finished");}
 
 JNIEXPORT void JNICALL
 Java_mmm_EchecsAR_ImageTargets_deinitApplicationNative(
 		JNIEnv* env, jobject obj)
 {
-	LOG("Java_mmm_EchecsAR_ImageTargets_deinitApplicationNative");
+	LOG(
+			"Java_mmm_EchecsAR_ImageTargets_deinitApplicationNative");
 
-	// Release texture resources
+// Release texture resources
 	if (textures != 0)
 	{
 		for (int i = 0; i < textureCount; ++i)
@@ -417,8 +411,8 @@ Java_mmm_EchecsAR_ImageTargets_startCamera(JNIEnv *,
 {
 	LOG("Java_mmm_EchecsAR_ImageTargets_startCamera");
 
-	// Select the camera to open, set this to QCAR::CameraDevice::CAMERA_FRONT
-	// to activate the front camera instead.
+// Select the camera to open, set this to QCAR::CameraDevice::CAMERA_FRONT
+// to activate the front camera instead.
 	QCAR::CameraDevice::CAMERA camera = QCAR::CameraDevice::CAMERA_DEFAULT;
 
 	// Initialize the camera:
@@ -458,7 +452,7 @@ Java_mmm_EchecsAR_ImageTargets_stopCamera(JNIEnv *, jobject)
 {
 	LOG("Java_mmm_EchecsAR_ImageTargets_stopCamera");
 
-	// Stop the tracker:
+// Stop the tracker:
 	QCAR::TrackerManager& trackerManager = QCAR::TrackerManager::getInstance();
 	QCAR::Tracker* imageTracker = trackerManager.getTracker(QCAR::Tracker::IMAGE_TRACKER);
 	if(imageTracker != 0)
@@ -473,7 +467,7 @@ Java_mmm_EchecsAR_ImageTargets_setProjectionMatrix(JNIEnv *, jobject)
 {
 	LOG("Java_mmm_EchecsAR_ImageTargets_setProjectionMatrix");
 
-	// Cache the projection matrix:
+// Cache the projection matrix:
 	const QCAR::CameraCalibration& cameraCalibration =
 	QCAR::CameraDevice::getInstance().getCameraCalibration();
 	projectionMatrix = QCAR::Tool::getProjectionGL(cameraCalibration, 2.0f, 2500.0f);
@@ -532,7 +526,7 @@ Java_mmm_EchecsAR_ImageTargetsRenderer_initRendering(
 {
 	LOG("Java_mmm_EchecsAR_ImageTargetsRenderer_initRendering");
 
-	// Define clear color
+// Define clear color
 	glClearColor(0.0f, 0.0f, 0.0f, QCAR::requiresAlpha() ? 0.0f : 1.0f);
 
 	// Now generate the OpenGL texture objects and add settings
@@ -569,7 +563,7 @@ Java_mmm_EchecsAR_ImageTargetsRenderer_updateRendering(
 {
 	LOG("Java_mmm_EchecsAR_ImageTargetsRenderer_updateRendering");
 
-	// Update screen dimensions
+// Update screen dimensions
 	screenWidth = width;
 	screenHeight = height;
 
@@ -613,6 +607,17 @@ void drawCells() {
 
 }
 
+void drawPieces() {
+	for (int i = 0; i < N / 2; i++) {
+		if (wPieces[i].isAlive) {
+			drawPiece(&wPieces[i]);
+		}
+		if (bPieces[i].isAlive) {
+			drawPiece(&bPieces[i]);
+		}
+	}
+}
+
 void drawPiece(Piece *piece) {
 	QCAR::Matrix44F modelViewProjection, objectMatrix;
 
@@ -640,6 +645,22 @@ void drawPiece(Piece *piece) {
 	glUniformMatrix4fv(mvpMatrixHandle, 1, GL_FALSE,
 			(GLfloat*) &modelViewProjection.data[0]);
 	glDrawArrays(GL_TRIANGLES, 0, piece->numVertices);
+}
+
+bool movePiece(Piece *piece, int row, int col) {
+	JNIEnv *env;
+	javaVM->AttachCurrentThread(&env, NULL);
+	jmethodID method = env->GetMethodID(activityClass, "move", "(IIII)Z");
+	jboolean move = (jboolean) env->CallBooleanMethod(activityObj, method, piece->row, piece->col, row, col);
+	bool isMoveAllowed = (bool) move;
+
+	if (isMoveAllowed) {
+		// Deplacement de la piece
+		piece->col = col;
+		piece->row = row;
+		updatePieceTransform(piece);
+	}
+	return isMoveAllowed;
 }
 
 void updatePieceTransform(Piece *piece) {
@@ -684,50 +705,41 @@ void handleTouches() {
 		for (int i = 0; i < N / 2; i++) {
 			// Check the white pieces
 			piece = &wPieces[i];
-			if (piece->row == row && piece->col == col) {
+			if (piece->row == row && piece->col == col && piece->isAlive) {
 				selected = piece;
 				break;
 			}
 
 			// Check the black pieces
 			piece = &bPieces[i];
-			if (piece->row == row && piece->col == col) {
+			if (piece->row == row && piece->col == col && piece->isAlive) {
 				selected = piece;
 				break;
 			}
 		}
 
 		if (selected == NULL) {
-			// If selected is NULL, this will deselect the currently selected piece
-			// If selectedPiece is not NULL, the piece will be moved
-			// TODO: chess rules
-
+			// Si on a touche une case vide
 			if (selectedPiece != NULL) {
-				JNIEnv *env;
-				javaVM->AttachCurrentThread(&env, NULL);
-				jmethodID method = env->GetMethodID(activityClass, "move", "(IIII)Z");
-				jboolean move = (jboolean) env->CallBooleanMethod(activityObj, method, selectedPiece->row, selectedPiece->col, row, col);
-				bool isMoveAllowed = (bool) move;
-
-				if (isMoveAllowed) {
-					// Deplacement de la piece
-					selectedPiece->col = col;
-					selectedPiece->row = row;
-					updatePieceTransform(selectedPiece);
-				}
+				movePiece(selectedPiece, row, col);
 			}
-
 			selectedPiece = NULL;
 			resetCells();
 		} else {
-			// If selected is not NULL, this will select a new piece
-			selectedPiece = selected;
-			showAvailableCells(row, col);
+			if (selectedPiece != NULL) {
+				// Si on a touche une piece alors qu'une piece etait deja selectionnee, on la mange
+				bool move = movePiece(selectedPiece, row, col);
+				if (move) selected->isAlive = false;
+				selectedPiece = NULL;
+				resetCells();
+			} else {
+				selectedPiece = selected;
+				showAvailableCells(row, col);
+			}
 		}
 
 		// Store the timestamp for this tap so we know we've handled it
 		lastTapTime = touch1.startTime;
-
 	}
 }
 
@@ -860,8 +872,7 @@ void configureVideoBackground() {
 
 		if (config.mSize.data[0] < screenWidth) {
 			LOG(
-					"Correcting rendering background size to handle missmatch between screen and video aspect ratios.");
-			config.mSize.data[0] = screenWidth;
+					"Correcting rendering background size to handle missmatch between screen and video aspect ratios.");config.mSize.data[0] = screenWidth;
 			config.mSize.data[1] = screenWidth
 			* (videoMode.mWidth / (float) videoMode.mHeight);
 		}
@@ -873,8 +884,7 @@ void configureVideoBackground() {
 
 		if (config.mSize.data[1] < screenHeight) {
 			LOG(
-					"Correcting rendering background size to handle missmatch between screen and video aspect ratios.");
-			config.mSize.data[0] = screenHeight
+					"Correcting rendering background size to handle missmatch between screen and video aspect ratios.");config.mSize.data[0] = screenHeight
 			* (videoMode.mWidth / (float) videoMode.mHeight);
 			config.mSize.data[1] = screenHeight;
 		}
@@ -885,7 +895,7 @@ void configureVideoBackground() {
 			videoMode.mWidth, videoMode.mHeight, screenWidth, screenHeight,
 			config.mSize.data[0], config.mSize.data[1]);
 
-	// Set the config:
+// Set the config:
 	QCAR::Renderer::getInstance().setVideoBackgroundConfig(config);
 }
 

@@ -171,7 +171,11 @@ Cell cells[N / 4][N / 4];
 
 void drawCells();
 
+void drawPieces();
+
 void drawPiece(Piece *);
+
+bool movePiece(Piece *, int, int);
 
 void updatePieceTransform(Piece *);
 
