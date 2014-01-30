@@ -861,8 +861,7 @@ void configureVideoBackground() {
 
 		if (config.mSize.data[0] < screenWidth) {
 			LOG("Correcting rendering background size to handle missmatch between screen and video aspect ratios.");config.mSize.data[0] = screenWidth;
-			config.mSize.data[1] = screenWidth
-			* (videoMode.mWidth / (float) videoMode.mHeight);
+			config.mSize.data[1] = screenWidth * (videoMode.mWidth / (float) videoMode.mHeight);
 		}
 	} else {
 		//LOG("configureVideoBackground LANDSCAPE");
