@@ -339,9 +339,9 @@ public class ImageTargets extends Activity {
 				getAssets()));
 		mTextures.add(Texture.loadTextureFromApk("black.jpg",
 				getAssets()));
-		mTextures.add(Texture.loadTextureFromApk("blue.jpg",
+		mTextures.add(Texture.loadTextureFromApk("selected.jpg",
 				getAssets()));
-		mTextures.add(Texture.loadTextureFromApk("available.jpg",
+		mTextures.add(Texture.loadTextureFromApk("available.png",
                 getAssets()));
 	}
 

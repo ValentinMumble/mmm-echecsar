@@ -262,7 +262,11 @@ Java_mmm_EchecsAR_ImageTargetsRenderer_renderFrame(JNIEnv *, jobject)
 		glActiveTexture(GL_TEXTURE0);
 		glUniform1i(texSampler2DHandle, 0 /*GL_TEXTURE0*/);
 
+		glEnable(GL_BLEND);
+		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 		drawCells();
+		glDisable(GL_BLEND);
+
 		drawPieces();
 
 		glDisableVertexAttribArray(vertexHandle);

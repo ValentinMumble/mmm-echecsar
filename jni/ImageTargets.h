@@ -120,8 +120,8 @@ float cellVertices[] = {
 float cellTexCoords[] = {
         0, 0,
         1, 0,
-        1, 1,
-        0, 1};
+        0, 1,
+        1, 1};
 
 float* vertices[N / 4] = {rookVertices, knightVertices, bishopVertices, queenVertices, kingVertices, bishopVertices, knightVertices, rookVertices};
 float* normals[N / 4] = {rookNormals, knightNormals, bishopNormals, queenNormals, kingNormals, bishopNormals, knightNormals, rookNormals};
@@ -152,7 +152,7 @@ QCAR::Matrix44F projectionMatrix, modelViewMatrix, inverseProjMatrix;
 
 // Constants:
 static const float pieceScale = 60.0f;
-static const float cellScale = 1.0f;
+static const float cellScale = .98f;
 
 QCAR::DataSet* dataSetCheckerboard = 0;
 
