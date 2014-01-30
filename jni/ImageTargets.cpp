@@ -216,23 +216,20 @@ Java_mmm_EchecsAR_ImageTargets_onQCARInitializedNative(JNIEnv *, jobject)
 	// Register the update callback where we handle the data set swap:
 	QCAR::registerCallback(&updateCallback);
 
-	// initialisation des x et y a la case superieure gauche
-	int x = -CELL_SIZE * 4 + CELL_SIZE / 2;
-	int y = CELL_SIZE * 4 - CELL_SIZE / 2;
-
 	// Initialisation des cells
 
 	resetCells();
 
 	// Initialisation des pieces
 
-	for (int i = 0; i < N / 4; i++) {
-		wPieces[i].position.data[0] = x;
-		wPieces[i].position.data[1] = y;
-		bPieces[i].position.data[0] = x;
-		bPieces[i].position.data[1] = -y;
+	for (int i = 0; i < 8; i++) {
+		wPieces[i].col = i;
+		wPieces[i].row = 0;
+		bPieces[i].col = i;
+		bPieces[i].row = 7;
 
 		wPieces[i].id = bPieces[i].id = i;
+		wPieces[i].isAlive = bPieces[i].isAlive = true;
 		wPieces[i].vertices = bPieces[i].vertices = vertices[i];
 		wPieces[i].normals = bPieces[i].normals = normals[i];
 		wPieces[i].texCoords = bPieces[i].texCoords = texCoords[i];
@@ -240,30 +237,25 @@ Java_mmm_EchecsAR_ImageTargets_onQCARInitializedNative(JNIEnv *, jobject)
 		wPieces[i].textureId = 0;
 		bPieces[i].textureId = 1;
 
-		x += CELL_SIZE;
-
 		updatePieceTransform(&wPieces[i]);
 		updatePieceTransform(&bPieces[i]);
 	}
 
-	// Pawns
-	x = -CELL_SIZE * 4 + CELL_SIZE / 2;
-	y = CELL_SIZE * 3 - CELL_SIZE / 2;
+	// PAWNS
 	for (int i = 8; i < N / 2; i++) {
-		wPieces[i].position.data[0] = x;
-		wPieces[i].position.data[1] = y;
-		bPieces[i].position.data[0] = x;
-		bPieces[i].position.data[1] = -y;
+		wPieces[i].col = i - 8;
+		wPieces[i].row = 1;
+		bPieces[i].col = i - 8;
+		bPieces[i].row = 6;
 
 		wPieces[i].id = bPieces[i].id = i;
+		wPieces[i].isAlive = bPieces[i].isAlive = true;
 		wPieces[i].vertices = bPieces[i].vertices = pawnVertices;
 		wPieces[i].normals = bPieces[i].normals = pawnNormals;
 		wPieces[i].texCoords = bPieces[i].texCoords = pawnTexCoords;
 		wPieces[i].numVertices = bPieces[i].numVertices = pawnNumVertices;
 		wPieces[i].textureId = 0;
 		bPieces[i].textureId = 1;
-
-		x += CELL_SIZE;
 
 		updatePieceTransform(&wPieces[i]);
 		updatePieceTransform(&bPieces[i]);
@@ -651,10 +643,16 @@ void drawPiece(Piece *piece) {
 }
 
 void updatePieceTransform(Piece *piece) {
+
+	float x = (piece->col - 4) * CELL_SIZE;
+	float y = (8 - piece->row - 4) * CELL_SIZE;
+
+	LOG("x : %f", x);
+
 	// Reset the piece transform to the identity matrix
 	piece->transform = SampleMath::Matrix44FIdentity();
 	float* transformPtr = &piece->transform.data[0];
-	SampleUtils::translatePoseMatrix(piece->position.data[0], piece->position.data[1], 0, transformPtr);
+	SampleUtils::translatePoseMatrix(x, y, 0, transformPtr);
 	SampleUtils::scalePoseMatrix(pieceScale, pieceScale, pieceScale, transformPtr);
 }
 
@@ -688,14 +686,14 @@ void handleTouches() {
 		for (int i = 0; i < N / 2; i++) {
 			// Check the white pieces
 			piece = &wPieces[i];
-			if (piece->position.data[0] == intersection.data[0] && piece->position.data[1] == intersection.data[1]) {
+			if (piece->row == row && piece->col == col) {
 				selected = piece;
 				break;
 			}
 
 			// Check the black pieces
 			piece = &bPieces[i];
-			if (piece->position.data[0] == intersection.data[0] && piece->position.data[1] == intersection.data[1]) {
+			if (piece->row == row && piece->col == col) {
 				selected = piece;
 				break;
 			}
@@ -707,19 +705,16 @@ void handleTouches() {
 			// TODO: chess rules
 
 			if (selectedPiece != NULL) {
-				int fromcol = floor(selectedPiece->position.data[0] / CELL_SIZE + 4);
-				int fromrow = N / 4 - ceil(selectedPiece->position.data[1] / CELL_SIZE + 4);
-
 				JNIEnv *env;
 				javaVM->AttachCurrentThread(&env, NULL);
 				jmethodID method = env->GetMethodID(activityClass, "move", "(IIII)Z");
-				jboolean move = (jboolean) env->CallBooleanMethod(activityObj, method, fromrow, fromcol, row, col);
+				jboolean move = (jboolean) env->CallBooleanMethod(activityObj, method, selectedPiece->row, selectedPiece->col, row, col);
 				bool isMoveAllowed = (bool) move;
 
 				if (isMoveAllowed) {
 					// Deplacement de la piece
-					selectedPiece->position.data[0] = intersection.data[0];
-					selectedPiece->position.data[1] = intersection.data[1];
+					selectedPiece->col = col;
+					selectedPiece->row = row;
 					updatePieceTransform(selectedPiece);
 				}
 			}

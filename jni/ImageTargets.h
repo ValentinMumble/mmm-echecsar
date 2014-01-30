@@ -99,8 +99,9 @@ typedef struct _Cell {
 
 typedef struct _Piece {
     int id;
-
-    QCAR::Vec2F position;
+    bool isAlive;
+    int row;
+    int col;
     QCAR::Matrix44F transform;
     float *vertices;
     float *normals;
