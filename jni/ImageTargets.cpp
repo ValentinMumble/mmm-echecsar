@@ -692,10 +692,12 @@ bool callMovePiece(Piece *piece, int row, int col) {
 
 JNIEXPORT void JNICALL
 Java_mmm_EchecsAR_ImageTargets_movePiece(jint fromrow, jint fromcol, jint torow, jint tocol) {
-	Piece *piece = getPiece((int) fromrow, (int) fromcol);
-	piece->row = (int) torow;
-	piece->col = (int) tocol;
-	updatePieceTransform(piece);
+	Piece *piece = getPiece((int) fromrow - 1, (int) fromcol - 1);
+	if (piece != NULL) {
+		piece->row = (int) torow - 1;
+		piece->col = (int) tocol - 1;
+		updatePieceTransform(piece);
+	}
 }
 
 Piece *getPiece(int row, int col) {
