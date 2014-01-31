@@ -298,7 +298,7 @@ public class CEchiquier implements ICEchiquier {
 		coupAux(coups, x, (y+1), roi.getColor());
 		coupAux(coups, x, (y-1), roi.getColor());
 
-		if (testPetitRock(roi, roi.getCoord(), new Coord(x, y+2)))
+		if (testPetitRock(roi, roi.getCoord(), new Coord(x, y+2)) )
 			coupAux(coups, x, y+2, roi.getColor());
 		if (testGrandRock(roi, roi.getCoord(), new Coord(x, y+2)))
 			coupAux(coups, x, y-2, roi.getColor());
@@ -334,8 +334,18 @@ public class CEchiquier implements ICEchiquier {
 		// changement de joueur
 		tourDeJoueur = (tourDeJoueur == ToolsModel.noir) ? ToolsModel.blanc : ToolsModel.noir ;
 		
+		// maj pos roi
+		if (pieceMove.getType().equals(ToolsModel.roi)){
+			if (pieceMove.getColor() == ToolsModel.blanc)
+				posRoiBlanc = pieceMove.getCoord().toString();
+			else
+				posRoiNoir = pieceMove.getCoord().toString();
+		}
+		
 		//System.out.println("pos dep = "+etatPlateau.get(positionDepart.toString()));
 		System.out.println("pos arr = "+etatPlateau.get(positionArrivee.toString()).toString());
+		System.out.println();
+		System.out.println("pos roi blanc = "+posRoiBlanc +" \n pos roi noir = "+posRoiNoir);
 		System.out.println();
 		
 		draw();

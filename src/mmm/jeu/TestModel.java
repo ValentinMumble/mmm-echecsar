@@ -38,11 +38,11 @@ public class TestModel {
 		System.out.println("au tour de "+echImpl.tourDeJoueur);
 		ech.deplacerPiece(new Coord(1,6), new Coord(2,6));
 		System.out.println("au tour de "+echImpl.tourDeJoueur);
-		ech.deplacerPiece(new Coord(7,4), new Coord(5,4));
+		ech.deplacerPiece(new Coord(7,2), new Coord(6,2));
 		System.out.println("au tour de "+echImpl.tourDeJoueur);
 		ech.deplacerPiece(new Coord(1,7), new Coord(3,6));
 		System.out.println("au tour de "+echImpl.tourDeJoueur);
-		ech.deplacerPiece(new Coord(5,4), new Coord(4,5));
+		ech.deplacerPiece(new Coord(8,3), new Coord(6,1));
 		
 		ech.draw();
 
