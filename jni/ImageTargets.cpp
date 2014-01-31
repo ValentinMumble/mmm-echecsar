@@ -592,9 +592,9 @@ void resetCells() {
 }
 
 void drawCells() {
-	int x = - 4 * CELL_SIZE + CELL_SIZE / 2;
+	int x = -4 * CELL_SIZE + CELL_SIZE / 2;
 	for (int i = 0; i < N / 4; i++) {
-		int y = 4 * CELL_SIZE - CELL_SIZE / 2;
+		int y = -4 * CELL_SIZE + CELL_SIZE / 2;
 		for (int j = 0; j < N / 4; j++) {
 			if (cells[i][j].isAvailable) {
 				QCAR::Matrix44F modelViewProjection, transform;
@@ -619,7 +619,7 @@ void drawCells() {
 						(GLfloat*) &modelViewProjection.data[0]);
 				glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
 			}
-			y -= CELL_SIZE;
+			y += CELL_SIZE;
 		}
 		x += CELL_SIZE;
 	}
@@ -693,7 +693,7 @@ bool movePiece(Piece *piece, int row, int col) {
 void updatePieceTransform(Piece *piece) {
 
 	float x = (piece->col - 4) * CELL_SIZE + CELL_SIZE / 2;
-	float y = (8 - piece->row - 4) * CELL_SIZE - CELL_SIZE / 2;
+	float y = (piece->row - 4) * CELL_SIZE + CELL_SIZE / 2;
 
 	// Reset the piece transform to the identity matrix
 	piece->transform = SampleMath::Matrix44FIdentity();
@@ -714,8 +714,8 @@ void handleTouches() {
 		Piece* piece;
 		Piece* selected = NULL;
 
-		int col = floor(intersection.data[0] / CELL_SIZE + 4);
-		int row = N / 4 - ceil(intersection.data[1] / CELL_SIZE + 4);
+		int col = intersection.data[0] / CELL_SIZE + 4;
+		int row = intersection.data[1] / CELL_SIZE + 4;
 
 		// For each piece, check for intersection with the touch
 		for (int i = 0; i < N / 2; i++) {
@@ -790,9 +790,9 @@ void showAvailableCells(int row, int col) {
 			vect.push_back(i);
 			if (ss.peek() == ',') ss.ignore();
 		}
-		int x = vect.at(1) - 1;
-		int y = vect.at(0) - 1;
-		cells[x][y].isAvailable = true;
+		int row = vect.at(1) - 1;
+		int col = vect.at(0) - 1;
+		cells[row][col].isAvailable = true;
 	}
 }
 
