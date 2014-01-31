@@ -748,9 +748,16 @@ void handleTouches() {
 				selectedPiece = NULL;
 				resetCells();
 			} else {
-				if (isWhiteMove() && selected->isWhite || !isWhiteMove() && !selected->isWhite) {
+				bool whiteMove = isWhiteMove();
+				if (whiteMove && selected->isWhite || !whiteMove && !selected->isWhite) {
 					selectedPiece = selected;
 					showAvailableCells(row, col);
+				} else {
+					if (whiteMove) {
+						displayMessage("C'est le tour du joueur blanc !");
+					} else {
+						displayMessage("C'est le tour du joueur noir !");
+					}
 				}
 			}
 		}
@@ -787,6 +794,14 @@ void showAvailableCells(int row, int col) {
 		int y = vect.at(0) - 1;
 		cells[x][y].isAvailable = true;
 	}
+}
+
+void displayMessage(char *message) {
+	JNIEnv *env;
+	javaVM->AttachCurrentThread(&env, NULL);
+	jstring js = env->NewStringUTF(message);
+	jmethodID method = env->GetMethodID(activityClass, "displayMessage", "(Ljava/lang/String;)V");
+	env->CallVoidMethod(activityObj, method, js);
 }
 
 void projectScreenPointToPlane(QCAR::Vec2F point, QCAR::Vec3F planeCenter, QCAR::Vec3F planeNormal,
