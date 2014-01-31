@@ -31,7 +31,7 @@ public class TestModel {
 		if (test != null)
 			System.out.println("cavalier mouv ?"+ test.toString());
 		
-		System.out.println("au tour de "+echImpl.tourDeJoueur);
+		/*System.out.println("au tour de "+echImpl.tourDeJoueur);
 		ech.deplacerPiece(new Coord(2, 4), new Coord(4, 4));
 		System.out.println("au tour de "+echImpl.tourDeJoueur);
 		ech.deplacerPiece(new Coord(7, 5), new Coord(5, 5));
@@ -39,12 +39,12 @@ public class TestModel {
 		ech.deplacerPiece(new Coord(4, 4), new Coord(5, 5));
 		System.out.println("au tour de "+echImpl.tourDeJoueur);
 		ech.deplacerPiece(new Coord(8, 6), new Coord(4, 2));
-		System.out.println("au tour de "+echImpl.tourDeJoueur);
+		System.out.println("au tour de "+echImpl.tourDeJoueur);*/
 
 		System.out.println("blanc en echec ? "+((CEchiquier)ech).isEnEchec(ToolsModel.blanc));//, ((CEchiquier)ech).etatPlateau));
 		System.out.println("noir en echec ? "+((CEchiquier)ech).isEnEchec(ToolsModel.noir));//, ((CEchiquier)ech).etatPlateau));
 
-		test = ech.mouvementPossibles(new Coord(5,5));
+		/*test = ech.mouvementPossibles(new Coord(5,5));
 		if (test != null)
 		System.out.println("pion mouv ?"+ test.toString());
 		else 
@@ -128,7 +128,8 @@ public class TestModel {
 		
 		ech.draw();
 		
-		test = ech.mouvementPossibles(new Coord(4,2));
+		test = ech.mouvementPossibles(new Coord(4,2));*/
+		
 		//System.out.println("coup du fou = "+test.toString());
 		/*
 		
@@ -190,7 +191,7 @@ public class TestModel {
 		
 		
 		
-		
+		ech.draw();
 		
 	}
 

@@ -17,7 +17,6 @@ public class CEchiquier implements ICEchiquier {
 	private String posRoiBlanc;
 	private String posRoiNoir;
 	//TODO : ajouter pour chaque mouvement possible si a la suite de ce mouvement l'un des roi est en echec
-	// si le roi allié est en echec interdir le mouvement 
 	// si le roi ennemi est en echec appel d'une fonction pour demander l'affichage de l'echec
 	
 	public char tourDeJoueur = ToolsModel.blanc;
@@ -251,35 +250,35 @@ public class CEchiquier implements ICEchiquier {
 
 		i = x-2;
 		j = y-1;
-		coupCavalierAux(coups, i, j, color);
+		coupAux(coups, i, j, color);
 		i = x+2;
 		j = y-1;
-		coupCavalierAux(coups, i, j, color);
+		coupAux(coups, i, j, color);
 		i = x-2;
 		j = y+1;
-		coupCavalierAux(coups, i, j, color);
+		coupAux(coups, i, j, color);
 		i = x+2;
 		j = y+1;
-		coupCavalierAux(coups, i, j, color);
+		coupAux(coups, i, j, color);
 		
 		i = x-1;
 		j = y-2;
-		coupCavalierAux(coups, i, j, color);
+		coupAux(coups, i, j, color);
 		i = x+1;
 		j = y-2;
-		coupCavalierAux(coups, i, j, color);
+		coupAux(coups, i, j, color);
 		i = x-1;
 		j = y+2;
-		coupCavalierAux(coups, i, j, color);
+		coupAux(coups, i, j, color);
 		i = x+1;
 		j = y+2;
-		coupCavalierAux(coups, i, j, color);
+		coupAux(coups, i, j, color);
 		
 	}
 	private boolean isInPlateau(int x){
 		return x<=8 && x>=1;
 	}
-	private void coupCavalierAux (ArrayList<Coord> coups, int i, int j, char color){
+	private void coupAux (ArrayList<Coord> coups, int i, int j, char color){
 		if (isInPlateau(i)&&isInPlateau(j)){
 			if (!isOccuped(new Coord(i, j)))
 				coups.add(new Coord(i, j));
@@ -290,14 +289,22 @@ public class CEchiquier implements ICEchiquier {
 		}
 	}
 	
-	private void coupRoi (ArrayList<Coord> coups, IPiece pion){
+	private void coupRoi (ArrayList<Coord> coups, IPiece roi){
+		int x = roi.getCoord().getX();
+		int y = roi.getCoord().getY();
+
+		coupAux(coups, (x+1), y, roi.getColor());
+		coupAux(coups, (x-1), y, roi.getColor());
+		coupAux(coups, x, (y+1), roi.getColor());
+		coupAux(coups, x, (y-1), roi.getColor());
 		
+		if (testPetitRock(roi, roi.getCoord(), new Coord(x+2, y))){
+			//ArrayList<Coo>
+		}
 	}
 	
 	@Override
 	public void deplacerPiece(Coord positionDepart, Coord positionArrivee) {
-		
-		//System.out.println("piece a bouger = "+etatPlateau.get(positionDepart.toString()).toString());
 		
 		IPiece pieceMove = etatPlateau.get(positionDepart.toString());
 		
@@ -308,10 +315,19 @@ public class CEchiquier implements ICEchiquier {
 		etatPlateau.put(pieceMove.getCoord().toString(), pieceMove);
 		
 		if (testPetitRock(pieceMove, positionDepart, positionArrivee)){
+			 IPiece tour = etatPlateau.get(new Coord(positionArrivee.getX(), 8));
 			 
-		}
+			 etatPlateau.remove(tour.getCoord().toString());
+			 tour.deplacer(new Coord(positionArrivee.getX(),6));
+			 etatPlateau.put(tour.getCoord().toString(), tour);
+			 
+;		}
 		else if (testGrandRock(pieceMove, positionDepart, positionArrivee)){
-			
+			 IPiece tour = etatPlateau.get(new Coord(positionArrivee.getX(), 1));
+			 
+			 etatPlateau.remove(tour.getCoord().toString());
+			 tour.deplacer(new Coord(positionArrivee.getX(),4));
+			 etatPlateau.put(tour.getCoord().toString(), tour);
 		}
 		
 		tourDeJoueur = (tourDeJoueur == ToolsModel.noir) ? ToolsModel.blanc : ToolsModel.noir ;
@@ -323,36 +339,54 @@ public class CEchiquier implements ICEchiquier {
 		draw();
 	}
 	private boolean testPetitRock(IPiece roi, Coord dep, Coord arr){
-		boolean sol = roi.getType().equals(ToolsModel.roi) && (
+		
+		int x = (roi.getColor()== ToolsModel.blanc) ? 1 : 8;
+				
+		boolean sol = roi.getType().equals(ToolsModel.roi) && ! roi.getDejaBouge() && (
 				(
-					roi.getColor()== ToolsModel.blanc && 
-					dep.equals(new Coord(1, 5)) && 
-					arr.equals(new Coord(1, 3)) &&
+					//roi.getColor()== ToolsModel.blanc && 
+					dep.equals(new Coord(x, 5)) && 
+					arr.equals(new Coord(x, 7)) &&
 					
-					etatPlateau.get(new Coord(1, 8).toString()).getType().equals(ToolsModel.tour) &&
-					! etatPlateau.get(new Coord(1, 8).toString()).getDejaBouge()
-				) ||
+					etatPlateau.get(new Coord(x, 8).toString()).getType().equals(ToolsModel.tour) &&
+					! etatPlateau.get(new Coord(x, 8).toString()).getDejaBouge()
+				) &&
+				(!isOccuped(new Coord(x, 6))) && (!isOccuped(new Coord(x, 7)))
+				
+				
+				/* ||
 				(
 					roi.getColor()== ToolsModel.noir && 
 					dep.equals(new Coord(8, 5)) && 
-					arr.equals(new Coord(8, 3))
-				)
+					arr.equals(new Coord(8, 7))&&
+					
+					etatPlateau.get(new Coord(8, 8).toString()).getType().equals(ToolsModel.tour) &&
+					! etatPlateau.get(new Coord(8, 8).toString()).getDejaBouge()
+				)*/
 			);
 				
 		return sol;
 	}
 	private boolean testGrandRock(IPiece roi, Coord dep, Coord arr){
-		boolean sol = roi.getType().equals(ToolsModel.roi) && (
+		
+		int x = (roi.getColor()== ToolsModel.blanc) ? 1 : 8;
+		
+		boolean sol = roi.getType().equals(ToolsModel.roi) && ! roi.getDejaBouge() && (
 				(
-					roi.getColor()== ToolsModel.blanc && 
-					dep.equals(new Coord(1, 5)) && 
-					arr.equals(new Coord(1, 3))
-				) ||
+					//roi.getColor()== ToolsModel.blanc && 
+					dep.equals(new Coord(x, 5)) && 
+					arr.equals(new Coord(x, 3)) &&
+					
+					etatPlateau.get(new Coord(x, 8).toString()).getType().equals(ToolsModel.tour) &&
+					! etatPlateau.get(new Coord(x, 8).toString()).getDejaBouge()
+				) &&
+				(!isOccuped(new Coord(x, 2))) && (!isOccuped(new Coord(x, 3))) && (!isOccuped(new Coord(x, 4)))
+				/*||
 				(
 					roi.getColor()== ToolsModel.noir && 
 					dep.equals(new Coord(8, 5)) && 
 					arr.equals(new Coord(8, 3))
-				)
+				)*/
 			);
 				
 		return sol;
@@ -365,7 +399,7 @@ public class CEchiquier implements ICEchiquier {
 		ArrayList<Coord> casesEnDanger = new ArrayList<Coord>();
 		
 		for (Entry<String, IPiece> c : etatPlateau.entrySet()) {
-			IPiece p = c.getValue();
+			//IPiece p = c.getValue();
 			Coord coord = new Coord(c.getKey());
 
 			//recuperation des coups de l'adversaire
@@ -379,9 +413,7 @@ public class CEchiquier implements ICEchiquier {
 						return true;
 				}
 			}
-			
 		}
-		
 		return false;
 	}
 	
