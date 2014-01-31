@@ -31,6 +31,31 @@ public class TestModel {
 		if (test != null)
 			System.out.println("cavalier mouv ?"+ test.toString());
 		
+		System.out.println("au tour de "+echImpl.tourDeJoueur);
+		ech.deplacerPiece(new Coord(2,5), new Coord(4,5));
+		System.out.println("au tour de "+echImpl.tourDeJoueur);
+		ech.deplacerPiece(new Coord(7,5), new Coord(5,5));
+		System.out.println("au tour de "+echImpl.tourDeJoueur);
+		ech.deplacerPiece(new Coord(1,6), new Coord(2,6));
+		System.out.println("au tour de "+echImpl.tourDeJoueur);
+		ech.deplacerPiece(new Coord(7,4), new Coord(5,4));
+		System.out.println("au tour de "+echImpl.tourDeJoueur);
+		ech.deplacerPiece(new Coord(1,7), new Coord(3,6));
+		System.out.println("au tour de "+echImpl.tourDeJoueur);
+		ech.deplacerPiece(new Coord(5,4), new Coord(4,5));
+		
+		ech.draw();
+
+		System.out.println("au tour de "+echImpl.tourDeJoueur);
+		
+		test = ech.mouvementPossibles(new Coord(1,5));
+		if (test != null)
+			System.out.println("Mouvement roi ? = "+test.toString());
+		
+		ech.deplacerPiece(new Coord(1,5), new Coord(1,7));
+		
+		
+		
 		/*System.out.println("au tour de "+echImpl.tourDeJoueur);
 		ech.deplacerPiece(new Coord(2, 4), new Coord(4, 4));
 		System.out.println("au tour de "+echImpl.tourDeJoueur);

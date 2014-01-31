@@ -297,25 +297,20 @@ public class CEchiquier implements ICEchiquier {
 		coupAux(coups, (x-1), y, roi.getColor());
 		coupAux(coups, x, (y+1), roi.getColor());
 		coupAux(coups, x, (y-1), roi.getColor());
-		
-		if (testPetitRock(roi, roi.getCoord(), new Coord(x+2, y))){
-			//ArrayList<Coo>
-		}
+
+		if (testPetitRock(roi, roi.getCoord(), new Coord(x, y+2)))
+			coupAux(coups, x, y+2, roi.getColor());
+		if (testGrandRock(roi, roi.getCoord(), new Coord(x, y+2)))
+			coupAux(coups, x, y-2, roi.getColor());
 	}
 	
 	@Override
 	public void deplacerPiece(Coord positionDepart, Coord positionArrivee) {
 		
 		IPiece pieceMove = etatPlateau.get(positionDepart.toString());
-		
-		etatPlateau.remove(pieceMove.getCoord().toString());
-		pieceMove.deplacer(positionArrivee);
-		if (isOccuped(positionArrivee))
-			etatPlateau.remove(positionArrivee.toString());
-		etatPlateau.put(pieceMove.getCoord().toString(), pieceMove);
-		
+
 		if (testPetitRock(pieceMove, positionDepart, positionArrivee)){
-			 IPiece tour = etatPlateau.get(new Coord(positionArrivee.getX(), 8));
+			 IPiece tour = etatPlateau.get(new Coord(positionArrivee.getX(), 8).toString());
 			 
 			 etatPlateau.remove(tour.getCoord().toString());
 			 tour.deplacer(new Coord(positionArrivee.getX(),6));
@@ -323,13 +318,20 @@ public class CEchiquier implements ICEchiquier {
 			 
 ;		}
 		else if (testGrandRock(pieceMove, positionDepart, positionArrivee)){
-			 IPiece tour = etatPlateau.get(new Coord(positionArrivee.getX(), 1));
+			 IPiece tour = etatPlateau.get(new Coord(positionArrivee.getX(), 1).toString());
 			 
 			 etatPlateau.remove(tour.getCoord().toString());
 			 tour.deplacer(new Coord(positionArrivee.getX(),4));
 			 etatPlateau.put(tour.getCoord().toString(), tour);
 		}
 		
+		etatPlateau.remove(pieceMove.getCoord().toString());
+		pieceMove.deplacer(positionArrivee);
+		if (isOccuped(positionArrivee))
+			etatPlateau.remove(positionArrivee.toString());
+		etatPlateau.put(pieceMove.getCoord().toString(), pieceMove);
+		
+		// changement de joueur
 		tourDeJoueur = (tourDeJoueur == ToolsModel.noir) ? ToolsModel.blanc : ToolsModel.noir ;
 		
 		//System.out.println("pos dep = "+etatPlateau.get(positionDepart.toString()));
