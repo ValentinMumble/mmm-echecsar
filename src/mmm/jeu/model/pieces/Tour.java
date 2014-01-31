@@ -1,7 +1,5 @@
 package mmm.jeu.model.pieces;
 
-import java.util.ArrayList;
-
 import mmm.jeu.model.Coord;
 import mmm.jeu.model.ToolsModel;
 import mmm.jeu.model.interfaces.ITour;

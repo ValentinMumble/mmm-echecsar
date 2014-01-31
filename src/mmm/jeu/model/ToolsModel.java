@@ -8,4 +8,8 @@ public class ToolsModel {
 	public final static String fou		= "Fou";
 	public final static String reine 	= "Reine";
 	public final static String roi 		= "Roi";
+
+	public final static char blanc = 'W';
+	public final static char noir = 'B';
+	
 }

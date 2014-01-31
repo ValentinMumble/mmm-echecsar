@@ -1,7 +1,5 @@
 package mmm.jeu.model.pieces;
 
-import java.util.ArrayList;
-
 import mmm.jeu.model.Coord;
 import mmm.jeu.model.interfaces.IPiece;
 
@@ -15,6 +13,13 @@ public class Piece implements IPiece {
 	protected Piece(Coord position, char color){
 		this.position = new Coord(position);
 		this.color = color;
+	}
+	
+	public Piece (IPiece clone){
+		this.position = new Coord(clone.getCoord());
+		this.color = clone.getColor();
+		this.type = new String(clone.getType());
+		this.dejaBouge = clone.getDejaBouge();
 	}
 	
 	@Override

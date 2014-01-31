@@ -1,11 +1,10 @@
 package mmm.jeu.control;
 
+import java.io.ObjectOutputStream.PutField;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Map.Entry;
-
-import android.location.Address;
 
 import mmm.jeu.model.Coord;
 import mmm.jeu.model.ToolsModel;
@@ -14,14 +13,14 @@ import mmm.jeu.model.pieces.*;
 
 public class CEchiquier implements ICEchiquier {
 
-	private Map<String, IPiece> etatPlateau;
+	public Map<String, IPiece> etatPlateau;
 	private String posRoiBlanc;
 	private String posRoiNoir;
 	//TODO : ajouter pour chaque mouvement possible si a la suite de ce mouvement l'un des roi est en echec
 	// si le roi allié est en echec interdir le mouvement 
 	// si le roi ennemi est en echec appel d'une fonction pour demander l'affichage de l'echec
 	
-	private char tourDeJoueur = 'B';
+	public char tourDeJoueur = ToolsModel.blanc;
 	
 	public CEchiquier(){
 		initPlateau();
@@ -51,6 +50,10 @@ public class CEchiquier implements ICEchiquier {
 	 */
 	@Override
 	public ArrayList<Coord> mouvementPossibles(Coord coordonneePiece) {
+		return mouvementPossiblesAux(coordonneePiece, true);
+	}
+	
+	private ArrayList<Coord> mouvementPossiblesAux(Coord coordonneePiece, boolean validation) {
 		if (!isOccuped(coordonneePiece) || etatPlateau.get(coordonneePiece.toString()).getColor() != tourDeJoueur)
 			return null;
 
@@ -71,8 +74,14 @@ public class CEchiquier implements ICEchiquier {
 			coupReine(mvt, pieceSelected);
 		else if (typePiece.equals(ToolsModel.roi))
 			coupRoi(mvt, pieceSelected);
-			
 		
+			
+		/*if (validation){
+			System.out.println("LIST COUP BASE = "+mvt.toString());
+			//tourDeJoueur = (tourDeJoueur == ToolsModel.noir) ? ToolsModel.blanc : ToolsModel.noir;
+			mvt = validationCoups(mvt, coordonneePiece);
+			//tourDeJoueur = (tourDeJoueur == ToolsModel.noir) ? ToolsModel.blanc : ToolsModel.noir;
+		}*/
 		
 		return mvt;
 	}
@@ -88,7 +97,7 @@ public class CEchiquier implements ICEchiquier {
 		int x = pion.getCoord().getX();
 		int y = pion.getCoord().getY();
 		
-		if (pion.getColor() == 'W')
+		if (pion.getColor() == ToolsModel.blanc)
 		{	
 			if (!isOccuped(new Coord(x+1, y)))
 				coups.add(new Coord(x+1, y));
@@ -292,7 +301,7 @@ public class CEchiquier implements ICEchiquier {
 	@Override
 	public void deplacerPiece(Coord positionDepart, Coord positionArrivee) {
 		
-		System.out.println("piece a bouger = "+etatPlateau.get(positionDepart.toString()).toString());
+		//System.out.println("piece a bouger = "+etatPlateau.get(positionDepart.toString()).toString());
 		
 		IPiece pieceMove = etatPlateau.get(positionDepart.toString());
 		
@@ -309,13 +318,18 @@ public class CEchiquier implements ICEchiquier {
 			
 		}
 		
-		System.out.println("pos dep = "+etatPlateau.get(positionDepart.toString()));
+		tourDeJoueur = (tourDeJoueur == ToolsModel.noir) ? ToolsModel.blanc : ToolsModel.noir ;
+		
+		//System.out.println("pos dep = "+etatPlateau.get(positionDepart.toString()));
 		System.out.println("pos arr = "+etatPlateau.get(positionArrivee.toString()).toString());
+		System.out.println();
+		
+		draw();
 	}
 	private boolean testPetitRock(IPiece roi, Coord dep, Coord arr){
 		boolean sol = roi.getType().equals(ToolsModel.roi) && (
 				(
-					roi.getColor()=='W' && 
+					roi.getColor()== ToolsModel.blanc && 
 					dep.equals(new Coord(1, 5)) && 
 					arr.equals(new Coord(1, 3)) &&
 					
@@ -323,7 +337,7 @@ public class CEchiquier implements ICEchiquier {
 					! etatPlateau.get(new Coord(1, 8).toString()).getDejaBouge()
 				) ||
 				(
-					roi.getColor()=='B' && 
+					roi.getColor()== ToolsModel.noir && 
 					dep.equals(new Coord(8, 5)) && 
 					arr.equals(new Coord(8, 3))
 				)
@@ -334,12 +348,12 @@ public class CEchiquier implements ICEchiquier {
 	private boolean testGrandRock(IPiece roi, Coord dep, Coord arr){
 		boolean sol = roi.getType().equals(ToolsModel.roi) && (
 				(
-					roi.getColor()=='W' && 
+					roi.getColor()== ToolsModel.blanc && 
 					dep.equals(new Coord(1, 5)) && 
 					arr.equals(new Coord(1, 3))
 				) ||
 				(
-					roi.getColor()=='B' && 
+					roi.getColor()== ToolsModel.noir && 
 					dep.equals(new Coord(8, 5)) && 
 					arr.equals(new Coord(8, 3))
 				)
@@ -348,25 +362,62 @@ public class CEchiquier implements ICEchiquier {
 		return sol;
 	}
 	
-	private boolean isEnEchec (char kingColor, Coord kingPos){
+	public boolean isEnEchec (char kingColor, Map<String, IPiece> plateau/*, Coord kingPos*/){
+		
+		Coord kingPos = (kingColor == ToolsModel.blanc) ? (new Coord(posRoiBlanc)) : (new Coord(posRoiNoir)) ;
+		//System.out.println("kingPos = "+kingPos.toString());
+		
 		ArrayList<Coord> casesEnDanger = new ArrayList<Coord>();
 		
-		for (Entry<String, IPiece> c : etatPlateau.entrySet()) {
+		for (Entry<String, IPiece> c : plateau.entrySet()) {
 			IPiece p = c.getValue();
 			Coord coord = new Coord(c.getKey());
+
+			tourDeJoueur = (tourDeJoueur == ToolsModel.noir) ? ToolsModel.blanc : ToolsModel.noir;
+			casesEnDanger = mouvementPossiblesAux(coord, false);
+			tourDeJoueur = (tourDeJoueur == ToolsModel.noir) ? ToolsModel.blanc : ToolsModel.noir;
 			
-			casesEnDanger = mouvementPossibles(coord);
-			
-			for(Coord d : casesEnDanger){
-				if (d.equals(kingPos))
-					return true;
+			if (casesEnDanger != null) {
+				for(Coord d : casesEnDanger){
+					if (d.equals(kingPos))
+						return true;
+				}
 			}
-			
 			
 		}
 		
 		return false;
 	}
+	
+	private ArrayList<Coord> validationCoups (ArrayList<Coord> coups, Coord depart){
+		ArrayList<Coord> coupsValide = new ArrayList<Coord>();
+		
+		Map<String, IPiece> etatPlateauClone = new HashMap<String, IPiece>(etatPlateau);
+		char myKing = (tourDeJoueur == ToolsModel.noir) ? (ToolsModel.noir) : (ToolsModel.blanc) ;
+		IPiece pieceMove = new Piece(etatPlateau.get(depart.toString()));
+
+		for (Coord c : coups) {
+			//simule le deplacement
+			etatPlateauClone.remove(depart.toString());
+			pieceMove.deplacer(depart);
+			if (isOccuped(c))
+				etatPlateauClone.remove(c.toString());
+			etatPlateauClone.put(c.toString(),pieceMove);
+			//tourDeJoueur = (tourDeJoueur == ToolsModel.noir) ? ToolsModel.blanc : ToolsModel.noir;
+			// test si le depacement laisse son roi en echec
+			if (! isEnEchec(myKing, etatPlateauClone))
+				coupsValide.add(c);
+			
+			// reinitialisation des clones
+			etatPlateauClone = new HashMap<String, IPiece>(etatPlateau);
+			pieceMove = new Piece(etatPlateau.get(depart.toString()));
+			//tourDeJoueur = (tourDeJoueur == ToolsModel.noir) ? ToolsModel.blanc : ToolsModel.noir;
+		}
+		System.out.println("coup valide = "+coupsValide.toString());
+		return coupsValide;		
+	}
+	
+	
 
 	@Override
 	public IPiece getPiece(Coord position) {
@@ -376,31 +427,31 @@ public class CEchiquier implements ICEchiquier {
 	private void initPlateau(){
 		etatPlateau = new HashMap<String, IPiece>();
 
-		etatPlateau.put(new Coord(1, 1).toString(), new Tour	(new Coord(1, 1), 'W'));
-		etatPlateau.put(new Coord(1, 2).toString(), new Cavalier(new Coord(1, 2), 'W'));
-		etatPlateau.put(new Coord(1, 3).toString(), new Fou		(new Coord(1, 3), 'W'));
-		etatPlateau.put(new Coord(1, 4).toString(), new Reine	(new Coord(1, 4), 'W'));
-		etatPlateau.put(new Coord(1, 5).toString(), new Roi		(new Coord(1, 5), 'W'));
-		etatPlateau.put(new Coord(1, 6).toString(), new Fou		(new Coord(1, 6), 'W'));
-		etatPlateau.put(new Coord(1, 7).toString(), new Cavalier(new Coord(1, 7), 'W'));
-		etatPlateau.put(new Coord(1, 8).toString(), new Tour	(new Coord(1, 8), 'W'));
+		etatPlateau.put(new Coord(1, 1).toString(), new Tour	(new Coord(1, 1), ToolsModel.blanc));
+		etatPlateau.put(new Coord(1, 2).toString(), new Cavalier(new Coord(1, 2), ToolsModel.blanc));
+		etatPlateau.put(new Coord(1, 3).toString(), new Fou		(new Coord(1, 3), ToolsModel.blanc));
+		etatPlateau.put(new Coord(1, 4).toString(), new Reine	(new Coord(1, 4), ToolsModel.blanc));
+		etatPlateau.put(new Coord(1, 5).toString(), new Roi		(new Coord(1, 5), ToolsModel.blanc));
+		etatPlateau.put(new Coord(1, 6).toString(), new Fou		(new Coord(1, 6), ToolsModel.blanc));
+		etatPlateau.put(new Coord(1, 7).toString(), new Cavalier(new Coord(1, 7), ToolsModel.blanc));
+		etatPlateau.put(new Coord(1, 8).toString(), new Tour	(new Coord(1, 8), ToolsModel.blanc));
 		
 		posRoiBlanc = new Coord(1, 5).toString();
 
-		etatPlateau.put(new Coord(8, 1).toString(), new Tour	(new Coord(8, 1), 'B'));
-		etatPlateau.put(new Coord(8, 2).toString(), new Cavalier(new Coord(8, 2), 'B'));
-		etatPlateau.put(new Coord(8, 3).toString(), new Fou		(new Coord(8, 3), 'B'));
-		etatPlateau.put(new Coord(8, 4).toString(), new Reine	(new Coord(8, 4), 'B'));
-		etatPlateau.put(new Coord(8, 5).toString(), new Roi		(new Coord(8, 5), 'B'));
-		etatPlateau.put(new Coord(8, 6).toString(), new Fou		(new Coord(8, 6), 'B'));
-		etatPlateau.put(new Coord(8, 7).toString(), new Cavalier(new Coord(8, 7), 'B'));
-		etatPlateau.put(new Coord(8, 8).toString(), new Tour	(new Coord(8, 8), 'B'));
+		etatPlateau.put(new Coord(8, 1).toString(), new Tour	(new Coord(8, 1), ToolsModel.noir));
+		etatPlateau.put(new Coord(8, 2).toString(), new Cavalier(new Coord(8, 2), ToolsModel.noir));
+		etatPlateau.put(new Coord(8, 3).toString(), new Fou		(new Coord(8, 3), ToolsModel.noir));
+		etatPlateau.put(new Coord(8, 4).toString(), new Reine	(new Coord(8, 4), ToolsModel.noir));
+		etatPlateau.put(new Coord(8, 5).toString(), new Roi		(new Coord(8, 5), ToolsModel.noir));
+		etatPlateau.put(new Coord(8, 6).toString(), new Fou		(new Coord(8, 6), ToolsModel.noir));
+		etatPlateau.put(new Coord(8, 7).toString(), new Cavalier(new Coord(8, 7), ToolsModel.noir));
+		etatPlateau.put(new Coord(8, 8).toString(), new Tour	(new Coord(8, 8), ToolsModel.noir));
 		
 		posRoiNoir = new Coord(8, 5).toString();
 		
 		for (int i = 1; i < 9; i++){
-			etatPlateau.put(new Coord(2, i).toString(), new Pion(new Coord(2, i), 'W'));
-			etatPlateau.put(new Coord(7, i).toString(), new Pion(new Coord(7, i), 'B'));
+			etatPlateau.put(new Coord(2, i).toString(), new Pion(new Coord(2, i), ToolsModel.blanc));
+			etatPlateau.put(new Coord(7, i).toString(), new Pion(new Coord(7, i), ToolsModel.noir));
 		}
 	}
 	
