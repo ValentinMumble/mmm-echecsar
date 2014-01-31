@@ -45,7 +45,7 @@ public class TestModel {
 		if (test != null)
 			System.out.println("cavalier mouv ?"+ test.toString());
 		
-		System.out.println("au tour de "+echImpl.tourDeJoueur);
+		/*System.out.println("au tour de "+echImpl.tourDeJoueur);
 		ech.deplacerPiece(new Coord(2,5), new Coord(4,5));
 		System.out.println("au tour de "+echImpl.tourDeJoueur);
 		ech.deplacerPiece(new Coord(7,5), new Coord(5,5));
@@ -56,11 +56,41 @@ public class TestModel {
 		System.out.println("au tour de "+echImpl.tourDeJoueur);
 		ech.deplacerPiece(new Coord(1,7), new Coord(3,6));
 		System.out.println("au tour de "+echImpl.tourDeJoueur);
-		ech.deplacerPiece(new Coord(8,3), new Coord(6,1));
+		ech.deplacerPiece(new Coord(8,3), new Coord(6,1));*/
 		
-		ech.draw();
 
-		System.out.println("au tour de "+echImpl.tourDeJoueur);
+		// pion blanc
+		ech.deplacerPiece(new Coord(2,5), new Coord(4,5));
+		//pion noir
+		ech.deplacerPiece(new Coord(7,5), new Coord(5,5));
+		// cavalier blanc
+		ech.deplacerPiece(new Coord(1,7), new Coord(3,6));
+		//pion noir
+		ech.deplacerPiece(new Coord(7,4), new Coord(6,4));
+		// cavalier blanc
+		ech.deplacerPiece(new Coord(1,2), new Coord(3,3));
+		// fou noir
+		ech.deplacerPiece(new Coord(8,3), new Coord(4,7));
+		//fou blanc 
+		ech.deplacerPiece(new Coord(1,6), new Coord(4,3));
+		// pion noir 
+		ech.deplacerPiece(new Coord(7,8), new Coord(6,8));
+		// cavalier blanc
+		ech.deplacerPiece(new Coord(3,6), new Coord(5,5));
+		// fou noir prend la reine
+		ech.deplacerPiece(new Coord(4,7), new Coord(1,4));
+		// fou blanc met roi en echec
+		ech.deplacerPiece(new Coord(4,3), new Coord(7,6));
+		// roi escape
+		ech.deplacerPiece(new Coord(8,5), new Coord(7,5));
+		// cavalier met echec et mat
+		ech.deplacerPiece(new Coord(3,3), new Coord(5,4));
+		
+		
+		
+		//ech.draw();
+
+		/*System.out.println("au tour de "+echImpl.tourDeJoueur);
 		
 		test = ech.mouvementPossibles(new Coord(1,5));
 		if (test != null)

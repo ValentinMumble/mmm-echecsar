@@ -356,16 +356,21 @@ public class CEchiquier implements ICEchiquier {
 		
 		coupAux(coups, x, (y+1), roi.getColor());
 		coupAux(coups, x, (y-1), roi.getColor());
-
-		if (testPetitRock(roi, roi.getCoord(), new Coord(x, y+2)))
-			coupAux(coups, x, y+2, roi.getColor());
-		if (testGrandRock(roi, roi.getCoord(), new Coord(x, y-2)))
-			coupAux(coups, x, y-2, roi.getColor());
+	
+		if (!roi.getDejaBouge()){
+			if (testPetitRock(roi, roi.getCoord(), new Coord(x, y+2)))
+				coupAux(coups, x, y+2, roi.getColor());
+			if (testGrandRock(roi, roi.getCoord(), new Coord(x, y-2)))
+				coupAux(coups, x, y-2, roi.getColor());
+		}
 	}
 	
 	private boolean testPetitRock(IPiece roi, Coord dep, Coord arr){
 		
 		int x = (roi.getColor()== ToolsModel.blanc) ? 1 : 8;
+		
+		if (etatPlateau.get(new Coord(x, 8).toString()) == null)
+			return false;
 				
 		boolean sol = roi.getType().equals(ToolsModel.roi) && ! roi.getDejaBouge() && (
 				(
@@ -387,13 +392,16 @@ public class CEchiquier implements ICEchiquier {
 		
 		int x = (roi.getColor()== ToolsModel.blanc) ? 1 : 8;
 		
+		if (etatPlateau.get(new Coord(x, 1).toString()) == null)
+			return false;
+		
 		boolean sol = roi.getType().equals(ToolsModel.roi) && ! roi.getDejaBouge() && (
 				(
 					dep.equals(new Coord(x, 5)) && 
 					arr.equals(new Coord(x, 3)) &&
 					
-					etatPlateau.get(new Coord(x, 8).toString()).getType().equals(ToolsModel.tour) &&
-					! etatPlateau.get(new Coord(x, 8).toString()).getDejaBouge()
+					etatPlateau.get(new Coord(x, 1).toString()).getType().equals(ToolsModel.tour) &&
+					! etatPlateau.get(new Coord(x, 1).toString()).getDejaBouge()
 				) &&
 				(!isOccuped(new Coord(x, 2))) && (!isOccuped(new Coord(x, 3))) && (!isOccuped(new Coord(x, 4)))
 				
