@@ -181,7 +181,9 @@ void drawPiece(Piece *);
 
 bool isWhiteMove();
 
-bool movePiece(Piece *, int, int);
+bool callMovePiece(Piece *, int, int);
+
+Piece *getPiece(int, int);
 
 void updatePieceTransform(Piece *);
 

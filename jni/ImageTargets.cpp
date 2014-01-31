@@ -674,7 +674,7 @@ bool isWhiteMove() {
 	return (bool) move;
 }
 
-bool movePiece(Piece *piece, int row, int col) {
+bool callMovePiece(Piece *piece, int row, int col) {
 	JNIEnv *env;
 	javaVM->AttachCurrentThread(&env, NULL);
 	jmethodID method = env->GetMethodID(activityClass, "move", "(IIII)Z");
@@ -688,6 +688,29 @@ bool movePiece(Piece *piece, int row, int col) {
 		updatePieceTransform(piece);
 	}
 	return isMoveAllowed;
+}
+
+JNIEXPORT void JNICALL
+Java_mmm_EchecsAR_ImageTargets_movePiece(jint fromrow, jint fromcol, jint torow, jint tocol) {
+	Piece *piece = getPiece((int) fromrow, (int) fromcol);
+	piece->row = (int) torow;
+	piece->col = (int) tocol;
+	updatePieceTransform(piece);
+}
+
+Piece *getPiece(int row, int col) {
+	Piece *piece = NULL;
+	for (int i = 0; i < N / 2; i++) {
+		if (wPieces[i].row == row && wPieces[i].col == col) {
+			piece = &wPieces[i];
+			break;
+		}
+		if (bPieces[i].row == row && bPieces[i].col == col) {
+			piece = &bPieces[i];
+			break;
+		}
+	}
+	return piece;
 }
 
 void updatePieceTransform(Piece *piece) {
@@ -736,14 +759,14 @@ void handleTouches() {
 		if (selected == NULL) {
 			// Si on a touche une case vide
 			if (selectedPiece != NULL) {
-				movePiece(selectedPiece, row, col);
+				callMovePiece(selectedPiece, row, col);
 			}
 			selectedPiece = NULL;
 			resetCells();
 		} else {
 			if (selectedPiece != NULL) {
 				// Si on a touche une piece alors qu'une piece etait deja selectionnee, on la mange
-				bool move = movePiece(selectedPiece, row, col);
+				bool move = callMovePiece(selectedPiece, row, col);
 				if (move) selected->isAlive = false;
 				selectedPiece = NULL;
 				resetCells();
@@ -805,7 +828,7 @@ void displayMessage(char *message) {
 }
 
 void projectScreenPointToPlane(QCAR::Vec2F point, QCAR::Vec3F planeCenter, QCAR::Vec3F planeNormal,
-		QCAR::Vec3F &intersection, QCAR::Vec3F &lineStart, QCAR::Vec3F &lineEnd) {
+QCAR::Vec3F &intersection, QCAR::Vec3F &lineStart, QCAR::Vec3F &lineEnd) {
 	// Window Coordinates to Normalized Device Coordinates
 	QCAR::VideoBackgroundConfig config = QCAR::Renderer::getInstance().getVideoBackgroundConfig();
 
@@ -839,8 +862,8 @@ void projectScreenPointToPlane(QCAR::Vec2F point, QCAR::Vec3F planeCenter, QCAR:
 }
 
 bool linePlaneIntersection(QCAR::Vec3F lineStart, QCAR::Vec3F lineEnd,
-		QCAR::Vec3F pointOnPlane, QCAR::Vec3F planeNormal,
-		QCAR::Vec3F &intersection) {
+QCAR::Vec3F pointOnPlane, QCAR::Vec3F planeNormal,
+QCAR::Vec3F &intersection) {
 	QCAR::Vec3F lineDir = SampleMath::Vec3FSub(lineEnd, lineStart);
 	lineDir = SampleMath::Vec3FNormalize(lineDir);
 
@@ -876,7 +899,7 @@ void configureVideoBackground() {
 	// Get the default video mode:
 	QCAR::CameraDevice& cameraDevice = QCAR::CameraDevice::getInstance();
 	QCAR::VideoMode videoMode = cameraDevice.getVideoMode(
-			QCAR::CameraDevice::MODE_DEFAULT);
+	QCAR::CameraDevice::MODE_DEFAULT);
 
 	// Configure the video background
 	QCAR::VideoBackgroundConfig config;
@@ -903,16 +926,16 @@ void configureVideoBackground() {
 
 		if (config.mSize.data[1] < screenHeight) {
 			LOG(
-					"Correcting rendering background size to handle missmatch between screen and video aspect ratios.");config.mSize.data[0] = screenHeight
+			"Correcting rendering background size to handle missmatch between screen and video aspect ratios.");config.mSize.data[0] = screenHeight
 			* (videoMode.mWidth / (float) videoMode.mHeight);
 			config.mSize.data[1] = screenHeight;
 		}
 	}
 
 	LOG(
-			"Configure Video Background : Video (%d,%d), Screen (%d,%d), mSize (%d,%d)",
-			videoMode.mWidth, videoMode.mHeight, screenWidth, screenHeight,
-			config.mSize.data[0], config.mSize.data[1]);
+	"Configure Video Background : Video (%d,%d), Screen (%d,%d), mSize (%d,%d)",
+	videoMode.mWidth, videoMode.mHeight, screenWidth, screenHeight,
+	config.mSize.data[0], config.mSize.data[1]);
 
 // Set the config:
 	QCAR::Renderer::getInstance().setVideoBackgroundConfig(config);

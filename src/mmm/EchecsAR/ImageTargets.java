@@ -47,7 +47,7 @@ import android.widget.Toast;
 import com.qualcomm.QCAR.QCAR;
 
 /** The main activity for the ImageTargets sample. */
-public class ImageTargets extends Activity {
+public class ImageTargets extends Activity implements Adapter {
 	// Focus mode constants:
 	private static final int FOCUS_MODE_NORMAL = 0;
 	private static final int FOCUS_MODE_CONTINUOUS_AUTO = 1;
@@ -1030,4 +1030,7 @@ public class ImageTargets extends Activity {
     		return false;
     	}
     }
+    
+    @Override
+    public native void movePiece(int fromrow, int fromcol, int torow, int tocol);
 }
