@@ -20,6 +20,7 @@ import java.util.Vector;
 import mmm.jeu.control.CEchiquier;
 import mmm.jeu.control.ICEchiquier;
 import mmm.jeu.model.Coord;
+import mmm.jeu.model.ToolsModel;
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.content.Context;
@@ -122,7 +123,7 @@ public class ImageTargets extends Activity {
 
 	private RelativeLayout mUILayout;
 	
-	private ICEchiquier ech;
+	private CEchiquier ech;
 
 	/** Static initializer block to load native libraries on start-up. */
 	static {
@@ -774,10 +775,6 @@ public class ImageTargets extends Activity {
 	public Texture getTexture(int i) {
 		return mTextures.elementAt(i);
 	}
-	
-	 public void tante() {
-	    	System.out.println("tante");
-	    }
 
 	/** A helper for loading native libraries stored in "libs/armeabi*". */
 	public static boolean loadLibrary(String nLibName) {
@@ -1016,6 +1013,10 @@ public class ImageTargets extends Activity {
 	    	}
     	}
     	return res;
+    }
+    
+    public boolean isWhiteMove() {
+    	return ech.tourDeJoueur == ToolsModel.blanc;
     }
     
     public boolean move(int fromrow, int fromcol, int torow, int tocol) {

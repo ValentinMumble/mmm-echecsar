@@ -100,6 +100,7 @@ typedef struct _Cell {
 typedef struct _Piece {
     int id;
     bool isAlive;
+    bool isWhite;
     int row;
     int col;
     QCAR::Matrix44F transform;
@@ -177,6 +178,8 @@ void drawCells();
 void drawPieces();
 
 void drawPiece(Piece *);
+
+bool isWhiteMove();
 
 bool movePiece(Piece *, int, int);
 

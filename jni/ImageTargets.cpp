@@ -551,6 +551,8 @@ void initBoard() {
 		wPieces[i].numVertices = bPieces[i].numVertices = numVertices[i];
 		wPieces[i].textureId = 0;
 		bPieces[i].textureId = 1;
+		wPieces[i].isWhite = true;
+		bPieces[i].isWhite = false;
 
 		updatePieceTransform(&wPieces[i]);
 		updatePieceTransform(&bPieces[i]);
@@ -571,6 +573,8 @@ void initBoard() {
 		wPieces[i].numVertices = bPieces[i].numVertices = pawnNumVertices;
 		wPieces[i].textureId = 0;
 		bPieces[i].textureId = 1;
+		wPieces[i].isWhite = true;
+		bPieces[i].isWhite = false;
 
 		updatePieceTransform(&wPieces[i]);
 		updatePieceTransform(&bPieces[i]);
@@ -662,6 +666,14 @@ void drawPiece(Piece *piece) {
 	glDrawArrays(GL_TRIANGLES, 0, piece->numVertices);
 }
 
+bool isWhiteMove() {
+	JNIEnv *env;
+	javaVM->AttachCurrentThread(&env, NULL);
+	jmethodID method = env->GetMethodID(activityClass, "isWhiteMove", "()Z");
+	jboolean move = (jboolean) env->CallBooleanMethod(activityObj, method);
+	return (bool) move;
+}
+
 bool movePiece(Piece *piece, int row, int col) {
 	JNIEnv *env;
 	javaVM->AttachCurrentThread(&env, NULL);
@@ -713,7 +725,6 @@ void handleTouches() {
 				selected = piece;
 				break;
 			}
-
 			// Check the black pieces
 			piece = &bPieces[i];
 			if (piece->row == row && piece->col == col && piece->isAlive) {
@@ -737,8 +748,10 @@ void handleTouches() {
 				selectedPiece = NULL;
 				resetCells();
 			} else {
-				selectedPiece = selected;
-				showAvailableCells(row, col);
+				if (isWhiteMove() && selected->isWhite || !isWhiteMove() && !selected->isWhite) {
+					selectedPiece = selected;
+					showAvailableCells(row, col);
+				}
 			}
 		}
 
