@@ -328,7 +328,7 @@ public class ImageTargets extends Activity implements Adapter {
 		// Update the application status to start initializing application:
 		updateApplicationStatus(APPSTATUS_INIT_APP);
 		
-		ech = new CEchiquier();
+		ech = new CEchiquier(this);
 	}
 
 	/**
@@ -996,6 +996,7 @@ public class ImageTargets extends Activity implements Adapter {
 	}
 	
 	// Called from native to display a message
+	@Override
     public void displayMessage(String text)
     {
     	// We use a handler because this thread cannot change the UI

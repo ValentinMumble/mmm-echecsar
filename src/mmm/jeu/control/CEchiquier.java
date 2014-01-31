@@ -1,11 +1,11 @@
 package mmm.jeu.control;
 
-import java.io.ObjectOutputStream.PutField;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Map.Entry;
 
+import mmm.EchecsAR.Adapter;
 import mmm.jeu.model.Coord;
 import mmm.jeu.model.ToolsModel;
 import mmm.jeu.model.interfaces.IPiece;
@@ -16,13 +16,16 @@ public class CEchiquier implements ICEchiquier {
 	public Map<String, IPiece> etatPlateau;
 	private String posRoiBlanc;
 	private String posRoiNoir;
+	
+	private Adapter myAdapter;
 	//TODO : ajouter pour chaque mouvement possible si a la suite de ce mouvement l'un des roi est en echec
 	// si le roi ennemi est en echec appel d'une fonction pour demander l'affichage de l'echec
 	
 	public char tourDeJoueur = ToolsModel.blanc;
 	
-	public CEchiquier(){
+	public CEchiquier(Adapter myAdapter){
 		initPlateau();
+		this.myAdapter = myAdapter;
 		/*for (Entry<String, IPiece> c : etatPlateau.entrySet()) {
 			System.out.println(c.getKey().toString());
 			System.out.println(((Piece)c.getValue()).toString());
@@ -77,9 +80,60 @@ public class CEchiquier implements ICEchiquier {
 		if (validation)
 			mvt = validationCoups(mvt, coordonneePiece);
 		
-			
-		
 		return mvt;
+	}
+
+	@Override
+	public void deplacerPiece(Coord positionDepart, Coord positionArrivee) {
+		
+		IPiece pieceMove = etatPlateau.get(positionDepart.toString());
+
+		if (testPetitRock(pieceMove, positionDepart, positionArrivee)){
+			 IPiece tour = etatPlateau.get(new Coord(positionArrivee.getX(), 8).toString());
+			 
+			 etatPlateau.remove(tour.getCoord().toString());
+			 tour.deplacer(new Coord(positionArrivee.getX(),6));
+			 etatPlateau.put(tour.getCoord().toString(), tour);
+			 myAdapter.movePiece(positionArrivee.getX(), 8, positionArrivee.getX(), 6);
+			 
+;		}
+		else if (testGrandRock(pieceMove, positionDepart, positionArrivee)){
+			 IPiece tour = etatPlateau.get(new Coord(positionArrivee.getX(), 1).toString());
+			 
+			 etatPlateau.remove(tour.getCoord().toString());
+			 tour.deplacer(new Coord(positionArrivee.getX(),4));
+			 etatPlateau.put(tour.getCoord().toString(), tour);
+			 myAdapter.movePiece(positionArrivee.getX(), 1, positionArrivee.getX(), 4);
+		}
+		
+		etatPlateau.remove(pieceMove.getCoord().toString());
+		pieceMove.deplacer(positionArrivee);
+		if (isOccuped(positionArrivee))
+			etatPlateau.remove(positionArrivee.toString());
+		etatPlateau.put(pieceMove.getCoord().toString(), pieceMove);
+		
+		// changement de joueur
+		tourDeJoueur = (tourDeJoueur == ToolsModel.noir) ? ToolsModel.blanc : ToolsModel.noir ;
+		
+		// maj pos roi
+		if (pieceMove.getType().equals(ToolsModel.roi)){
+			if (pieceMove.getColor() == ToolsModel.blanc)
+				posRoiBlanc = pieceMove.getCoord().toString();
+			else
+				posRoiNoir = pieceMove.getCoord().toString();
+		}
+		
+		
+		// verif echec ou echec et mat adversaire
+		VerifCheackMat();
+		
+		//System.out.println("pos dep = "+etatPlateau.get(positionDepart.toString()));
+		System.out.println("pos arr = "+etatPlateau.get(positionArrivee.toString()).toString());
+		System.out.println();
+		/*System.out.println("pos roi blanc = "+posRoiBlanc +" \n pos roi noir = "+posRoiNoir);
+		System.out.println();*/
+		
+		draw();
 	}
 	
 	/**
@@ -240,7 +294,6 @@ public class CEchiquier implements ICEchiquier {
 		this.coupTour(coups, reine);
 		this.coupFou(coups, reine);
 	}
-	
 	private void coupCavalier(ArrayList<Coord> coups, IPiece cavalier){
 		int x = cavalier.getCoord().getX();
 		int y = cavalier.getCoord().getY();
@@ -289,7 +342,6 @@ public class CEchiquier implements ICEchiquier {
 			}
 		}
 	}
-	
 	private void coupRoi (ArrayList<Coord> coups, IPiece roi){
 		int x = roi.getCoord().getX();
 		int y = roi.getCoord().getY();
@@ -311,52 +363,6 @@ public class CEchiquier implements ICEchiquier {
 			coupAux(coups, x, y-2, roi.getColor());
 	}
 	
-	@Override
-	public void deplacerPiece(Coord positionDepart, Coord positionArrivee) {
-		
-		IPiece pieceMove = etatPlateau.get(positionDepart.toString());
-
-		if (testPetitRock(pieceMove, positionDepart, positionArrivee)){
-			 IPiece tour = etatPlateau.get(new Coord(positionArrivee.getX(), 8).toString());
-			 
-			 etatPlateau.remove(tour.getCoord().toString());
-			 tour.deplacer(new Coord(positionArrivee.getX(),6));
-			 etatPlateau.put(tour.getCoord().toString(), tour);
-			 
-;		}
-		else if (testGrandRock(pieceMove, positionDepart, positionArrivee)){
-			 IPiece tour = etatPlateau.get(new Coord(positionArrivee.getX(), 1).toString());
-			 
-			 etatPlateau.remove(tour.getCoord().toString());
-			 tour.deplacer(new Coord(positionArrivee.getX(),4));
-			 etatPlateau.put(tour.getCoord().toString(), tour);
-		}
-		
-		etatPlateau.remove(pieceMove.getCoord().toString());
-		pieceMove.deplacer(positionArrivee);
-		if (isOccuped(positionArrivee))
-			etatPlateau.remove(positionArrivee.toString());
-		etatPlateau.put(pieceMove.getCoord().toString(), pieceMove);
-		
-		// changement de joueur
-		tourDeJoueur = (tourDeJoueur == ToolsModel.noir) ? ToolsModel.blanc : ToolsModel.noir ;
-		
-		// maj pos roi
-		if (pieceMove.getType().equals(ToolsModel.roi)){
-			if (pieceMove.getColor() == ToolsModel.blanc)
-				posRoiBlanc = pieceMove.getCoord().toString();
-			else
-				posRoiNoir = pieceMove.getCoord().toString();
-		}
-		
-		//System.out.println("pos dep = "+etatPlateau.get(positionDepart.toString()));
-		System.out.println("pos arr = "+etatPlateau.get(positionArrivee.toString()).toString());
-		System.out.println();
-		/*System.out.println("pos roi blanc = "+posRoiBlanc +" \n pos roi noir = "+posRoiNoir);
-		System.out.println();*/
-		
-		draw();
-	}
 	private boolean testPetitRock(IPiece roi, Coord dep, Coord arr){
 		
 		int x = (roi.getColor()== ToolsModel.blanc) ? 1 : 8;
@@ -433,11 +439,13 @@ public class CEchiquier implements ICEchiquier {
 	
 	public boolean isEnEchec (char kingColor){
 		
+		Map<String, IPiece> clone = new HashMap<String, IPiece>(etatPlateau);
+		
 		Coord kingPos = (kingColor == ToolsModel.blanc) ? (new Coord(posRoiBlanc)) : (new Coord(posRoiNoir)) ;
 		
 		ArrayList<Coord> casesEnDanger = new ArrayList<Coord>();
 		
-		for (Entry<String, IPiece> c : etatPlateau.entrySet()) {
+		for (Entry<String, IPiece> c : clone.entrySet()) {
 			//IPiece p = c.getValue();
 			Coord coord = new Coord(c.getKey());
 
@@ -454,6 +462,33 @@ public class CEchiquier implements ICEchiquier {
 			}
 		}
 		return false;
+	}
+	
+	private void VerifCheackMat (){
+		
+		Map<String, IPiece> etatPlateauSave = new HashMap<String, IPiece>(etatPlateau);
+		
+		boolean echec = isEnEchec(tourDeJoueur);
+		
+		if (echec){
+			boolean mat = true;
+			for (Entry<String, IPiece> c : etatPlateauSave.entrySet()) {
+				IPiece piece = c.getValue();
+				if (piece.getColor() == tourDeJoueur){
+					ArrayList<Coord> coups = mouvementPossibles(piece.getCoord());
+					mat = mat && coups.size() == 0;
+				}
+				
+			}
+			
+			if (!mat)
+				// action lors de l'echec
+				myAdapter.displayMessage("Joueur "+tourDeJoueur+" est Echec");
+			else
+				// action lors du mat
+				myAdapter.displayMessage("Joueur "+tourDeJoueur+" est Echec&Mat");
+		}
+		
 	}
 	
 	/**

@@ -2,6 +2,7 @@ package mmm.jeu;
 
 import java.util.ArrayList;
 
+import mmm.EchecsAR.Adapter;
 import mmm.jeu.control.CEchiquier;
 import mmm.jeu.control.ICEchiquier;
 import mmm.jeu.model.Coord;
@@ -14,7 +15,20 @@ public class TestModel {
 	 * @param args
 	 */
 	public static void main(String[] args) {
-		ICEchiquier ech = new CEchiquier();
+		Adapter adapteur = new Adapter() {
+			
+			@Override
+			public void movePiece(int fromrow, int fromcol, int torow, int tocol) {
+				// TODO Auto-generated method stub
+				
+			}
+			
+			@Override
+			public void displayMessage(String message) {
+				System.out.println(message);
+			}
+		};
+		ICEchiquier ech = new CEchiquier(adapteur);
 		CEchiquier echImpl = (CEchiquier)ech;
 		
 		ech.draw();
@@ -36,7 +50,7 @@ public class TestModel {
 		System.out.println("au tour de "+echImpl.tourDeJoueur);
 		ech.deplacerPiece(new Coord(7,5), new Coord(5,5));
 		System.out.println("au tour de "+echImpl.tourDeJoueur);
-		ech.deplacerPiece(new Coord(1,6), new Coord(2,6));
+		ech.deplacerPiece(new Coord(1,6), new Coord(3,8));
 		System.out.println("au tour de "+echImpl.tourDeJoueur);
 		ech.deplacerPiece(new Coord(7,2), new Coord(6,2));
 		System.out.println("au tour de "+echImpl.tourDeJoueur);
@@ -52,9 +66,15 @@ public class TestModel {
 		if (test != null)
 			System.out.println("Mouvement roi ? = "+test.toString());
 		
+		ech.deplacerPiece(new Coord(1,4), new Coord(3,7));
+		
+		ech.deplacerPiece(new Coord(8,4), new Coord(2,5));
+		
 		//ech.deplacerPiece(new Coord(1,5), new Coord(1,7));
 		
-		
+
+		//System.out.println("blanc en echec ? "+((CEchiquier)ech).isEnEchec(ToolsModel.blanc));//, ((CEchiquier)ech).etatPlateau));
+		//System.out.println("noir en echec ? "+((CEchiquier)ech).isEnEchec(ToolsModel.noir));//, ((CEchiquier)ech).etatPlateau));
 		
 		/*System.out.println("au tour de "+echImpl.tourDeJoueur);
 		ech.deplacerPiece(new Coord(2, 4), new Coord(4, 4));
@@ -66,8 +86,6 @@ public class TestModel {
 		ech.deplacerPiece(new Coord(8, 6), new Coord(4, 2));
 		System.out.println("au tour de "+echImpl.tourDeJoueur);*/
 
-		System.out.println("blanc en echec ? "+((CEchiquier)ech).isEnEchec(ToolsModel.blanc));//, ((CEchiquier)ech).etatPlateau));
-		System.out.println("noir en echec ? "+((CEchiquier)ech).isEnEchec(ToolsModel.noir));//, ((CEchiquier)ech).etatPlateau));
 
 		/*test = ech.mouvementPossibles(new Coord(5,5));
 		if (test != null)
