@@ -52,7 +52,7 @@ public class TestModel {
 		if (test != null)
 			System.out.println("Mouvement roi ? = "+test.toString());
 		
-		ech.deplacerPiece(new Coord(1,5), new Coord(1,7));
+		//ech.deplacerPiece(new Coord(1,5), new Coord(1,7));
 		
 		
 		

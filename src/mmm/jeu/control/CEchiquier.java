@@ -74,9 +74,10 @@ public class CEchiquier implements ICEchiquier {
 		else if (typePiece.equals(ToolsModel.roi))
 			coupRoi(mvt, pieceSelected);
 		
-			
 		if (validation)
 			mvt = validationCoups(mvt, coordonneePiece);
+		
+			
 		
 		return mvt;
 	}
@@ -295,12 +296,18 @@ public class CEchiquier implements ICEchiquier {
 
 		coupAux(coups, (x+1), y, roi.getColor());
 		coupAux(coups, (x-1), y, roi.getColor());
+
+		coupAux(coups, (x+1), (y+1), roi.getColor());
+		coupAux(coups, (x+1), (y-1), roi.getColor());
+		coupAux(coups, (x-1), (y+1), roi.getColor());
+		coupAux(coups, (x-1), (y-1), roi.getColor());
+		
 		coupAux(coups, x, (y+1), roi.getColor());
 		coupAux(coups, x, (y-1), roi.getColor());
 
-		if (testPetitRock(roi, roi.getCoord(), new Coord(x, y+2)) )
+		if (testPetitRock(roi, roi.getCoord(), new Coord(x, y+2)))
 			coupAux(coups, x, y+2, roi.getColor());
-		if (testGrandRock(roi, roi.getCoord(), new Coord(x, y+2)))
+		if (testGrandRock(roi, roi.getCoord(), new Coord(x, y-2)))
 			coupAux(coups, x, y-2, roi.getColor());
 	}
 	
@@ -345,8 +352,8 @@ public class CEchiquier implements ICEchiquier {
 		//System.out.println("pos dep = "+etatPlateau.get(positionDepart.toString()));
 		System.out.println("pos arr = "+etatPlateau.get(positionArrivee.toString()).toString());
 		System.out.println();
-		System.out.println("pos roi blanc = "+posRoiBlanc +" \n pos roi noir = "+posRoiNoir);
-		System.out.println();
+		/*System.out.println("pos roi blanc = "+posRoiBlanc +" \n pos roi noir = "+posRoiNoir);
+		System.out.println();*/
 		
 		draw();
 	}
@@ -356,7 +363,6 @@ public class CEchiquier implements ICEchiquier {
 				
 		boolean sol = roi.getType().equals(ToolsModel.roi) && ! roi.getDejaBouge() && (
 				(
-					//roi.getColor()== ToolsModel.blanc && 
 					dep.equals(new Coord(x, 5)) && 
 					arr.equals(new Coord(x, 7)) &&
 					
@@ -365,16 +371,8 @@ public class CEchiquier implements ICEchiquier {
 				) &&
 				(!isOccuped(new Coord(x, 6))) && (!isOccuped(new Coord(x, 7)))
 				
-				
-				/* ||
-				(
-					roi.getColor()== ToolsModel.noir && 
-					dep.equals(new Coord(8, 5)) && 
-					arr.equals(new Coord(8, 7))&&
-					
-					etatPlateau.get(new Coord(8, 8).toString()).getType().equals(ToolsModel.tour) &&
-					! etatPlateau.get(new Coord(8, 8).toString()).getDejaBouge()
-				)*/
+				&& testRockNoEchec(new Coord(x, 6))
+				&& testRockNoEchec(new Coord(x, 7))
 			);
 				
 		return sol;
@@ -385,7 +383,6 @@ public class CEchiquier implements ICEchiquier {
 		
 		boolean sol = roi.getType().equals(ToolsModel.roi) && ! roi.getDejaBouge() && (
 				(
-					//roi.getColor()== ToolsModel.blanc && 
 					dep.equals(new Coord(x, 5)) && 
 					arr.equals(new Coord(x, 3)) &&
 					
@@ -393,15 +390,45 @@ public class CEchiquier implements ICEchiquier {
 					! etatPlateau.get(new Coord(x, 8).toString()).getDejaBouge()
 				) &&
 				(!isOccuped(new Coord(x, 2))) && (!isOccuped(new Coord(x, 3))) && (!isOccuped(new Coord(x, 4)))
-				/*||
-				(
-					roi.getColor()== ToolsModel.noir && 
-					dep.equals(new Coord(8, 5)) && 
-					arr.equals(new Coord(8, 3))
-				)*/
+				
+				&& testRockNoEchec(new Coord(x, 2))
+				&& testRockNoEchec(new Coord(x, 3))
+				&& testRockNoEchec(new Coord(x, 4))
 			);
 				
 		return sol;
+	}
+	private boolean testRockNoEchec(Coord passage){
+		Coord start = new Coord(passage.getX(), 5);
+		boolean pasEchec = true;
+		
+		Map<String, IPiece> etatPlateauSave = new HashMap<String, IPiece>(etatPlateau);
+		char myKing = (tourDeJoueur == ToolsModel.noir) ? (ToolsModel.noir) : (ToolsModel.blanc) ;
+		IPiece pieceMove = new Piece(etatPlateau.get(start.toString()));
+				
+		String savePosBlanc = posRoiBlanc;
+		String savePosNoir = posRoiNoir;
+		
+		etatPlateau.remove(start.toString());
+		pieceMove.deplacer(passage);
+		if (isOccuped(passage))
+			etatPlateau.remove(passage.toString());
+		etatPlateau.put(passage.toString(),pieceMove);
+		
+		if (myKing == ToolsModel.blanc)
+			posRoiBlanc = passage.toString();
+		else
+			posRoiNoir = passage.toString();
+		
+		pasEchec = !(isEnEchec(myKing));
+		
+		posRoiBlanc = savePosBlanc;
+		posRoiNoir = savePosNoir;
+		etatPlateau = new HashMap<String, IPiece>(etatPlateauSave);
+		pieceMove = new Piece(etatPlateau.get(start.toString()));
+		
+		
+		return pasEchec;
 	}
 	
 	public boolean isEnEchec (char kingColor){
@@ -441,21 +468,34 @@ public class CEchiquier implements ICEchiquier {
 		Map<String, IPiece> etatPlateauSave = new HashMap<String, IPiece>(etatPlateau);
 		char myKing = (tourDeJoueur == ToolsModel.noir) ? (ToolsModel.noir) : (ToolsModel.blanc) ;
 		IPiece pieceMove = new Piece(etatPlateau.get(depart.toString()));
+				
+		String savePosBlanc = posRoiBlanc;
+		String savePosNoir = posRoiNoir;
+			
 
 		for (Coord c : coups) {
 			
 			//simule le deplacement
 			etatPlateau.remove(depart.toString());
-			pieceMove.deplacer(depart);
+			pieceMove.deplacer(c);
 			if (isOccuped(c))
 				etatPlateau.remove(c.toString());
 			etatPlateau.put(c.toString(),pieceMove);
+			
+			if(pieceMove.getType().equals(ToolsModel.roi)){
+				if (myKing == ToolsModel.blanc)
+					posRoiBlanc = c.toString();
+				else
+					posRoiNoir = c.toString();
+			}
 			
 			// test si le depacement laisse son roi en echec
 			if (isEnEchec(myKing))
 				coupsValide.remove(c);
 			
 			// annulation de la simulation
+			posRoiBlanc = savePosBlanc;
+			posRoiNoir = savePosNoir;
 			etatPlateau = new HashMap<String, IPiece>(etatPlateauSave);
 			pieceMove = new Piece(etatPlateau.get(depart.toString()));
 		}
