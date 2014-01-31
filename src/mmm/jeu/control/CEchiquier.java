@@ -76,12 +76,8 @@ public class CEchiquier implements ICEchiquier {
 			coupRoi(mvt, pieceSelected);
 		
 			
-		/*if (validation){
-			System.out.println("LIST COUP BASE = "+mvt.toString());
-			//tourDeJoueur = (tourDeJoueur == ToolsModel.noir) ? ToolsModel.blanc : ToolsModel.noir;
+		if (validation)
 			mvt = validationCoups(mvt, coordonneePiece);
-			//tourDeJoueur = (tourDeJoueur == ToolsModel.noir) ? ToolsModel.blanc : ToolsModel.noir;
-		}*/
 		
 		return mvt;
 	}
@@ -362,17 +358,17 @@ public class CEchiquier implements ICEchiquier {
 		return sol;
 	}
 	
-	public boolean isEnEchec (char kingColor, Map<String, IPiece> plateau/*, Coord kingPos*/){
+	public boolean isEnEchec (char kingColor){
 		
 		Coord kingPos = (kingColor == ToolsModel.blanc) ? (new Coord(posRoiBlanc)) : (new Coord(posRoiNoir)) ;
-		//System.out.println("kingPos = "+kingPos.toString());
 		
 		ArrayList<Coord> casesEnDanger = new ArrayList<Coord>();
 		
-		for (Entry<String, IPiece> c : plateau.entrySet()) {
+		for (Entry<String, IPiece> c : etatPlateau.entrySet()) {
 			IPiece p = c.getValue();
 			Coord coord = new Coord(c.getKey());
 
+			//recuperation des coups de l'adversaire
 			tourDeJoueur = (tourDeJoueur == ToolsModel.noir) ? ToolsModel.blanc : ToolsModel.noir;
 			casesEnDanger = mouvementPossiblesAux(coord, false);
 			tourDeJoueur = (tourDeJoueur == ToolsModel.noir) ? ToolsModel.blanc : ToolsModel.noir;
@@ -389,31 +385,36 @@ public class CEchiquier implements ICEchiquier {
 		return false;
 	}
 	
+	/**
+	 * Cette fonction renvoi la liste des coups valide , c'est à dire que le roi ne soit pas en echec après le mouvement
+	 * @param coups : liste des coups a valider
+	 * @param depart : position de la piece a bouger
+	 * @return la liste des coups validés
+	 */
 	private ArrayList<Coord> validationCoups (ArrayList<Coord> coups, Coord depart){
-		ArrayList<Coord> coupsValide = new ArrayList<Coord>();
+		ArrayList<Coord> coupsValide = new ArrayList<Coord>(coups);
 		
-		Map<String, IPiece> etatPlateauClone = new HashMap<String, IPiece>(etatPlateau);
+		Map<String, IPiece> etatPlateauSave = new HashMap<String, IPiece>(etatPlateau);
 		char myKing = (tourDeJoueur == ToolsModel.noir) ? (ToolsModel.noir) : (ToolsModel.blanc) ;
 		IPiece pieceMove = new Piece(etatPlateau.get(depart.toString()));
 
 		for (Coord c : coups) {
+			
 			//simule le deplacement
-			etatPlateauClone.remove(depart.toString());
+			etatPlateau.remove(depart.toString());
 			pieceMove.deplacer(depart);
 			if (isOccuped(c))
-				etatPlateauClone.remove(c.toString());
-			etatPlateauClone.put(c.toString(),pieceMove);
-			//tourDeJoueur = (tourDeJoueur == ToolsModel.noir) ? ToolsModel.blanc : ToolsModel.noir;
-			// test si le depacement laisse son roi en echec
-			if (! isEnEchec(myKing, etatPlateauClone))
-				coupsValide.add(c);
+				etatPlateau.remove(c.toString());
+			etatPlateau.put(c.toString(),pieceMove);
 			
-			// reinitialisation des clones
-			etatPlateauClone = new HashMap<String, IPiece>(etatPlateau);
+			// test si le depacement laisse son roi en echec
+			if (isEnEchec(myKing))
+				coupsValide.remove(c);
+			
+			// annulation de la simulation
+			etatPlateau = new HashMap<String, IPiece>(etatPlateauSave);
 			pieceMove = new Piece(etatPlateau.get(depart.toString()));
-			//tourDeJoueur = (tourDeJoueur == ToolsModel.noir) ? ToolsModel.blanc : ToolsModel.noir;
 		}
-		System.out.println("coup valide = "+coupsValide.toString());
 		return coupsValide;		
 	}
 	

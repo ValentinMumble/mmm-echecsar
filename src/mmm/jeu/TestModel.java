@@ -41,8 +41,8 @@ public class TestModel {
 		ech.deplacerPiece(new Coord(8, 6), new Coord(4, 2));
 		System.out.println("au tour de "+echImpl.tourDeJoueur);
 
-		System.out.println("blanc en echec ? "+((CEchiquier)ech).isEnEchec(ToolsModel.blanc, ((CEchiquier)ech).etatPlateau));
-		System.out.println("noir en echec ? "+((CEchiquier)ech).isEnEchec(ToolsModel.noir, ((CEchiquier)ech).etatPlateau));
+		System.out.println("blanc en echec ? "+((CEchiquier)ech).isEnEchec(ToolsModel.blanc));//, ((CEchiquier)ech).etatPlateau));
+		System.out.println("noir en echec ? "+((CEchiquier)ech).isEnEchec(ToolsModel.noir));//, ((CEchiquier)ech).etatPlateau));
 
 		test = ech.mouvementPossibles(new Coord(5,5));
 		if (test != null)
