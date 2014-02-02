@@ -694,6 +694,10 @@ JNIEXPORT void JNICALL
 Java_mmm_EchecsAR_ImageTargets_nativeMove(JNIEnv *, jobject, jint fromrow, jint fromcol, jint torow, jint tocol) {
 	Piece *piece = getPiece((int) fromrow - 1, (int) fromcol - 1);
 	if (piece != NULL) {
+		Piece *deadPiece = getPiece((int) torow - 1, (int) tocol - 1);
+		if (deadPiece != NULL) {
+			deadPiece->isAlive = false;
+		}
 		piece->row = (int) torow - 1;
 		piece->col = (int) tocol - 1;
 		updatePieceTransform(piece);
