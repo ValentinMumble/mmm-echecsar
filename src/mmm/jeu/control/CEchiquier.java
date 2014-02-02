@@ -95,8 +95,7 @@ public class CEchiquier implements ICEchiquier {
 			 tour.deplacer(new Coord(positionArrivee.getX(),6));
 			 etatPlateau.put(tour.getCoord().toString(), tour);
 			 myAdapter.movePiece(positionArrivee.getX(), 8, positionArrivee.getX(), 6);
-			 
-;		}
+		}
 		else if (testGrandRock(pieceMove, positionDepart, positionArrivee)){
 			 IPiece tour = etatPlateau.get(new Coord(positionArrivee.getX(), 1).toString());
 			 

@@ -37,5 +37,13 @@
     <string name="secure_connect">Connect a device - Secure</string>
     <string name="insecure_connect">Connect a device - Insecure</string>
     <string name="discoverable">Make discoverable</string>
+    
+    <!-- Menu Fin de Partie -->
+    <string name="menu_fin">Fin de Partie</string>
+    <string name="message_clic_menu">Fin de Partie 
+        Appuyer sur menu</string>
+    <string name="new_game">Rejouer une partie</string>
+    <string name="return_menu">Retour au menu principal</string>
+    <string name="quitter">Quitter</string>
 
 </resources>
