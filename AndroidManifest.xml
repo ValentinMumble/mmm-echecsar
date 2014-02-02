@@ -59,6 +59,8 @@
         active type: 3G/WiFi).
      -->
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+    <uses-permission android:name="android.permission.BLUETOOTH_ADMIN" />
+    <uses-permission android:name="android.permission.BLUETOOTH" />
 
     <!--
       NOTE: The setting 'android:launchMode="singleTask"' makes sure
@@ -113,6 +115,11 @@
         <activity
             android:name="mmm.EchecsAR.ImageTargets"
             android:configChanges="orientation|keyboardHidden|screenSize|smallestScreenSize" />
+        
+        <activity android:name="mmm.bluetooth.DeviceListActivity"
+                  android:label="@string/select_device"
+                  android:theme="@android:style/Theme.Holo.Dialog"
+                  android:configChanges="orientation|keyboardHidden" />
 
     </application>
 
