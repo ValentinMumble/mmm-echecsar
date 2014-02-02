@@ -486,6 +486,14 @@ public class ImageTargets extends Activity implements Adapter {
 			mGlView.setVisibility(View.VISIBLE);
 			mGlView.onResume();
 		}
+		
+		if (mChatService != null) {
+            // Only if the state is STATE_NONE, do we know that we haven't started already
+            if (mChatService.getState() == BluetoothChatService.STATE_NONE) {
+              // Start the Bluetooth chat services
+              mChatService.start();
+            }
+        }
 	}
 
 	private void updateActivityOrientation() {
@@ -616,6 +624,8 @@ public class ImageTargets extends Activity implements Adapter {
 			// Deinitialize QCAR SDK:
 			QCAR.deinit();
 		}
+		
+		if (mChatService != null) mChatService.stop();
 
 		System.gc();
 	}

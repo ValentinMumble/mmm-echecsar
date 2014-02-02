@@ -268,7 +268,6 @@ public class BluetoothChatService {
         private final BluetoothServerSocket mmServerSocket;
         private String mSocketType;
 
-        @SuppressLint("NewApi")
 		public AcceptThread(boolean secure) {
             BluetoothServerSocket tmp = null;
             mSocketType = secure ? "Secure":"Insecure";
@@ -354,7 +353,6 @@ public class BluetoothChatService {
         private final BluetoothDevice mmDevice;
         private String mSocketType;
 
-        @SuppressLint("NewApi")
 		public ConnectThread(BluetoothDevice device, boolean secure) {
             mmDevice = device;
             BluetoothSocket tmp = null;
