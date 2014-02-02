@@ -17,14 +17,17 @@ import java.lang.reflect.Field;
 import java.util.List;
 import java.util.Vector;
 
+import mmm.bluetooth.BluetoothChatService;
+import mmm.bluetooth.DeviceListActivity;
 import mmm.jeu.control.CEchiquier;
-import mmm.jeu.control.ICEchiquier;
 import mmm.jeu.model.Coord;
 import mmm.jeu.model.ToolsModel;
 import android.app.Activity;
 import android.app.AlertDialog;
-import android.content.Context;
+import android.bluetooth.BluetoothAdapter;
+import android.bluetooth.BluetoothDevice;
 import android.content.DialogInterface;
+import android.content.Intent;
 import android.content.pm.ActivityInfo;
 import android.content.res.Configuration;
 import android.graphics.Color;
@@ -66,9 +69,23 @@ public class ImageTargets extends Activity implements Adapter {
 	// Name of the native dynamic libraries to load:
 	private static final String NATIVE_LIB_SAMPLE = "ImageTargets";
 	private static final String NATIVE_LIB_QCAR = "QCAR";
-	
-	// A handler object for sending messages to the main activity thread
-    public static Handler mainActivityHandler;
+
+	// Bluetooth
+	// Message types sent from the BluetoothChatService Handler
+	public static final int MESSAGE_STATE_CHANGE = 1;
+	public static final int MESSAGE_READ = 2;
+	public static final int MESSAGE_WRITE = 3;
+	public static final int MESSAGE_DEVICE_NAME = 4;
+	public static final int MESSAGE_TOAST = 5;
+
+	// Intent request codes
+	private static final int REQUEST_CONNECT_DEVICE_SECURE = 1;
+	private static final int REQUEST_CONNECT_DEVICE_INSECURE = 2;
+	private static final int REQUEST_ENABLE_BT = 3;
+
+	// Key names received from the BluetoothChatService Handler
+	public static final String DEVICE_NAME = "device_name";
+	public static final String TOAST = "toast";
 
 	// Constants for Hiding/Showing Loading dialog
 	static final int HIDE_LOADING_DIALOG = 0;
@@ -122,8 +139,16 @@ public class ImageTargets extends Activity implements Adapter {
 	MenuItem mDataSetMenuItem = null;
 
 	private RelativeLayout mUILayout;
-	
+
 	private CEchiquier ech;
+
+	// Bluetooth
+	// Local Bluetooth adapter
+	private BluetoothAdapter mBluetoothAdapter = null;
+	// Member object for the chat services
+	private BluetoothChatService mChatService = null;
+	// Name of the connected device
+	private String mConnectedDeviceName = null;
 
 	/** Static initializer block to load native libraries on start-up. */
 	static {
@@ -157,23 +182,48 @@ public class ImageTargets extends Activity implements Adapter {
 			}
 		}
 	}
-	
-	static class DisplayMessageHandler extends Handler {
-		
-		private Context context;
-		
-		public DisplayMessageHandler(Context ctx) {
-			context = ctx;
+
+	private final Handler mHandler = new Handler() {
+
+		@Override
+		public void handleMessage(Message msg) {
+			switch (msg.what) {
+			case MESSAGE_STATE_CHANGE:
+				switch (msg.arg1) {
+				case BluetoothChatService.STATE_CONNECTED:
+					break;
+				case BluetoothChatService.STATE_CONNECTING:
+					break;
+				case BluetoothChatService.STATE_LISTEN:
+				case BluetoothChatService.STATE_NONE:
+					break;
+				}
+				break;
+			case MESSAGE_WRITE:
+				byte[] writeBuf = (byte[]) msg.obj;
+				// construct a string from the buffer
+				String writeMessage = new String(writeBuf);
+				break;
+			case MESSAGE_READ:
+				byte[] readBuf = (byte[]) msg.obj;
+				// construct a string from the valid bytes in the buffer
+				String readMessage = new String(readBuf, 0, msg.arg1);
+				receiveMove(readMessage);
+				break;
+			case MESSAGE_DEVICE_NAME:
+				// save the connected device's name
+				mConnectedDeviceName = msg.getData().getString(DEVICE_NAME);
+				Toast.makeText(getApplicationContext(),
+						"Connected to " + mConnectedDeviceName,
+						Toast.LENGTH_SHORT).show();
+				break;
+			case MESSAGE_TOAST:
+				Toast.makeText(getApplicationContext(), (String) msg.obj,
+						Toast.LENGTH_SHORT).show();
+				break;
+			}
 		}
-		
-        @Override
-        public void handleMessage(Message msg) {
-            String text = (String) msg.obj;
-            int duration = Toast.LENGTH_SHORT;
-            Toast toast = Toast.makeText(context, text, duration);
-            toast.show();
-        }
-    };
+	};
 
 	private Handler loadingDialogHandler = new LoadingDialogHandler(this);
 
@@ -327,8 +377,39 @@ public class ImageTargets extends Activity implements Adapter {
 
 		// Update the application status to start initializing application:
 		updateApplicationStatus(APPSTATUS_INIT_APP);
-		
+
 		ech = new CEchiquier(this);
+
+		// Get local Bluetooth adapter
+		mBluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
+
+		// If the adapter is null, then Bluetooth is not supported
+		if (mBluetoothAdapter == null) {
+			Toast.makeText(this, "Bluetooth is not available",
+					Toast.LENGTH_LONG).show();
+			finish();
+			return;
+		}
+	}
+
+	@Override
+	public void onStart() {
+		super.onStart();
+
+		// If BT is not on, request that it be enabled.
+		// setupChat() will then be called during onActivityResult
+		if (!mBluetoothAdapter.isEnabled()) {
+			Intent enableIntent = new Intent(
+					BluetoothAdapter.ACTION_REQUEST_ENABLE);
+			startActivityForResult(enableIntent, 3);
+			// Otherwise, setup the chat session
+		} else {
+			if (mChatService == null) {
+				// Initialize the BluetoothChatService to perform bluetooth
+				// connections
+				mChatService = new BluetoothChatService(this, mHandler);
+			}
+		}
 	}
 
 	/**
@@ -336,14 +417,10 @@ public class ImageTargets extends Activity implements Adapter {
 	 * for rendering.
 	 */
 	private void loadTextures() {
-		mTextures.add(Texture.loadTextureFromApk("white.jpg",
-				getAssets()));
-		mTextures.add(Texture.loadTextureFromApk("black.jpg",
-				getAssets()));
-		mTextures.add(Texture.loadTextureFromApk("selected.jpg",
-				getAssets()));
-		mTextures.add(Texture.loadTextureFromApk("available.png",
-                getAssets()));
+		mTextures.add(Texture.loadTextureFromApk("white.jpg", getAssets()));
+		mTextures.add(Texture.loadTextureFromApk("black.jpg", getAssets()));
+		mTextures.add(Texture.loadTextureFromApk("selected.jpg", getAssets()));
+		mTextures.add(Texture.loadTextureFromApk("available.png", getAssets()));
 	}
 
 	/** Configure QCAR with the desired version of OpenGL ES. */
@@ -395,8 +472,6 @@ public class ImageTargets extends Activity implements Adapter {
 		DebugLog.LOGD("ImageTargets::onResume");
 		super.onResume();
 
-		mainActivityHandler = new DisplayMessageHandler(getApplicationContext());
-        
 		// QCAR-specific resume operation
 		QCAR.onResume();
 
@@ -806,70 +881,60 @@ public class ImageTargets extends Activity implements Adapter {
 	}
 
 	/** Native function to receive touch events. */
-    public native void nativeTouchEvent(int actionType, int pointerId,
-        float x, float y);
+	public native void nativeTouchEvent(int actionType, int pointerId, float x,
+			float y);
 
+	/** Send touch events to native. */
+	public boolean onTouchEvent(MotionEvent event) {
+		int action = event.getAction();
+		int actionType = -1;
+		int pointerIndex = -1;
 
-    /** Send touch events to native. */
-    public boolean onTouchEvent(MotionEvent event)
-    {
-        int action = event.getAction();
-        int actionType = -1;
-        int pointerIndex = -1;
+		switch (action & MotionEvent.ACTION_MASK) {
+		case MotionEvent.ACTION_DOWN:
+			actionType = 0;
+			break;
 
-        switch (action & MotionEvent.ACTION_MASK) {
-            case MotionEvent.ACTION_DOWN:
-                actionType = 0;
-                break;
+		case MotionEvent.ACTION_POINTER_DOWN:
+			pointerIndex = (action & MotionEvent.ACTION_POINTER_INDEX_MASK) >> MotionEvent.ACTION_POINTER_INDEX_SHIFT;
+			actionType = 0;
+			break;
 
-            case MotionEvent.ACTION_POINTER_DOWN:
-                pointerIndex =
-                    (action & MotionEvent.ACTION_POINTER_INDEX_MASK)
-                        >> MotionEvent.ACTION_POINTER_INDEX_SHIFT;
-                actionType = 0;
-                break;
+		case MotionEvent.ACTION_MOVE:
+			actionType = 1;
+			break;
 
-            case MotionEvent.ACTION_MOVE:
-                actionType = 1;
-                break;
+		case MotionEvent.ACTION_UP:
+			actionType = 2;
+			break;
 
-            case MotionEvent.ACTION_UP:
-                actionType = 2;
-                break;
+		case MotionEvent.ACTION_POINTER_UP:
+			pointerIndex = (action & MotionEvent.ACTION_POINTER_INDEX_MASK) >> MotionEvent.ACTION_POINTER_INDEX_SHIFT;
+			actionType = 2;
+			break;
 
-            case MotionEvent.ACTION_POINTER_UP:
-                pointerIndex =
-                    (action & MotionEvent.ACTION_POINTER_INDEX_MASK)
-                        >> MotionEvent.ACTION_POINTER_INDEX_SHIFT;
-                actionType = 2;
-                break;
+		case MotionEvent.ACTION_CANCEL:
+			actionType = 3;
+			break;
+		}
 
-            case MotionEvent.ACTION_CANCEL:
-                actionType = 3;
-                break;
-        }
+		if (pointerIndex != -1) {
+			int pointerId = event.getPointerId(pointerIndex);
+			float x = event.getX(pointerIndex);
+			float y = event.getY(pointerIndex);
+			nativeTouchEvent(actionType, pointerId, x, y);
 
-        if (pointerIndex != -1)
-        {
-            int pointerId = event.getPointerId(pointerIndex);
-            float x = event.getX(pointerIndex);
-            float y = event.getY(pointerIndex);
-            nativeTouchEvent(actionType, pointerId, x, y);
+		} else {
+			for (int i = 0; i < event.getPointerCount(); i++) {
+				int pointerId = event.getPointerId(i);
+				float x = event.getX(i);
+				float y = event.getY(i);
+				nativeTouchEvent(actionType, pointerId, x, y);
+			}
+		}
 
-        }
-        else
-        {
-            for (int i = 0; i < event.getPointerCount(); i++)
-            {
-                int pointerId = event.getPointerId(i);
-                float x = event.getX(i);
-                float y = event.getY(i);
-                nativeTouchEvent(actionType, pointerId, x, y);
-            }
-        }
-
-        return true;
-    }
+		return true;
+	}
 
 	/**
 	 * Process Double Tap event for showing the Camera options menu
@@ -910,12 +975,13 @@ public class ImageTargets extends Activity implements Adapter {
 
 		final int itemCameraIndex = 0;
 		final int itemAutofocusIndex = 1;
-		final int itemSwitchDatasetIndex = 2;
+		final int itemScanForDevices = 2;
 
 		AlertDialog cameraOptionsDialog = null;
 
 		CharSequence[] items = { getString(R.string.menu_flash_on),
-				getString(R.string.menu_contAutofocus_off) };
+				getString(R.string.menu_contAutofocus_off),
+				getString(R.string.button_scan) };
 
 		// Updates list titles according to current state of the options
 		if (mFlash) {
@@ -981,9 +1047,11 @@ public class ImageTargets extends Activity implements Adapter {
 
 							// Dismisses the dialog
 							dialog.dismiss();
-						} else if (item == itemSwitchDatasetIndex) {
-
-							switchDatasetAsap();
+						} else if (item == itemScanForDevices) {
+							startActivityForResult(
+									new Intent(ImageTargets.this,
+											DeviceListActivity.class),
+									REQUEST_CONNECT_DEVICE_INSECURE);
 							dialog.dismiss();
 						}
 
@@ -994,44 +1062,110 @@ public class ImageTargets extends Activity implements Adapter {
 		cameraOptionsDialog = cameraOptionsDialogBuilder.create();
 		cameraOptionsDialog.show();
 	}
-	
+
+	// Bluetooth
+	public void onActivityResult(int requestCode, int resultCode, Intent data) {
+		switch (requestCode) {
+		case REQUEST_CONNECT_DEVICE_SECURE:
+			// When DeviceListActivity returns with a device to connect
+			if (resultCode == Activity.RESULT_OK) {
+				connectDevice(data, true);
+			}
+			break;
+		case REQUEST_CONNECT_DEVICE_INSECURE:
+			// When DeviceListActivity returns with a device to connect
+			if (resultCode == Activity.RESULT_OK) {
+				connectDevice(data, false);
+			}
+			break;
+		case REQUEST_ENABLE_BT:
+			// When the request to enable Bluetooth returns
+			if (resultCode == Activity.RESULT_OK) {
+				// Bluetooth is now enabled, so set up a chat session
+				mChatService = new BluetoothChatService(this, mHandler);
+			} else {
+				// User did not enable Bluetooth or an error occurred
+				Toast.makeText(this, "Bluetooth non actif", Toast.LENGTH_SHORT)
+						.show();
+				finish();
+			}
+		}
+	}
+
+	private void connectDevice(Intent data, boolean secure) {
+		// Get the device MAC address
+		String address = data.getExtras().getString(
+				DeviceListActivity.EXTRA_DEVICE_ADDRESS);
+		// Get the BluetoothDevice object
+		BluetoothDevice device = mBluetoothAdapter.getRemoteDevice(address);
+		// Attempt to connect to the device
+		mChatService.connect(device, secure);
+	}
+
 	// Called from native to display a message
 	@Override
-    public void displayMessage(String text)
-    {
-    	// We use a handler because this thread cannot change the UI
-        Message message = new Message();
-        message.obj = text;
-        mainActivityHandler.sendMessage(message);
-    }
-    
-    public String mouvementsPossibles(int row, int col) {
-    	List<Coord> mouvs = ech.mouvementPossibles(new Coord(row + 1, col + 1));
-    	String res = "";
-    	if (mouvs != null) {
-	    	for (Coord c : mouvs) {
-	    		res += c.toString() + ";";
-	    	}
-    	}
-    	return res;
-    }
-    
-    public boolean isWhiteMove() {
-    	return ech.tourDeJoueur == ToolsModel.blanc;
-    }
-    
-    public boolean move(int fromrow, int fromcol, int torow, int tocol) {
-    	Coord from = new Coord(fromrow + 1, fromcol + 1);
-    	Coord to = new Coord(torow + 1, tocol + 1);
-    	List<Coord> mouvs = ech.mouvementPossibles(from);
-    	if (mouvs != null && mouvs.contains(to)) {
-    		ech.deplacerPiece(from, to);
-    		return true;
-    	} else {
-    		return false;
-    	}
-    }
-    
-    @Override
-    public native void movePiece(int fromrow, int fromcol, int torow, int tocol);
+	public void displayMessage(String text) {
+		// We use a handler because this thread cannot change the UI
+		Message message = new Message();
+		message.what = MESSAGE_TOAST;
+		message.obj = text;
+		mHandler.sendMessage(message);
+	}
+
+	public String mouvementsPossibles(int row, int col) {
+		List<Coord> mouvs = ech.mouvementPossibles(new Coord(row + 1, col + 1));
+		String res = "";
+		if (mouvs != null) {
+			for (Coord c : mouvs) {
+				res += c.toString() + ";";
+			}
+		}
+		return res;
+	}
+
+	public boolean isWhiteMove() {
+		return ech.tourDeJoueur == ToolsModel.blanc;
+	}
+
+	public boolean move(int fromrow, int fromcol, int torow, int tocol) {
+		Coord from = new Coord(fromrow + 1, fromcol + 1);
+		Coord to = new Coord(torow + 1, tocol + 1);
+		List<Coord> mouvs = ech.mouvementPossibles(from);
+		if (mouvs != null && mouvs.contains(to)) {
+			ech.deplacerPiece(from, to);
+			sendMove(from.getX(), from.getY(), to.getX(), to.getY());
+			return true;
+		} else {
+			return false;
+		}
+
+	}
+
+	private void receiveMove(String move) {
+		String[] coords = move.split(";");
+		String[] from = coords[0].split(",");
+		String[] to = coords[1].split(",");
+		int fromx = Integer.parseInt(from[0]);
+		int fromy = Integer.parseInt(from[1]);
+		int tox = Integer.parseInt(to[0]);
+		int toy = Integer.parseInt(to[1]);
+		Coord fromc = new Coord(fromx, fromy);
+		Coord toc = new Coord(tox, toy);
+		ech.deplacerPiece(fromc, toc);
+		nativeMove(fromx, fromy, tox, toy);
+	}
+
+	private void sendMove(int fromrow, int fromcol, int torow, int tocol) {
+		String move = fromrow + "," + fromcol + ";" + torow + "," + tocol;
+		byte[] out = move.getBytes();
+		mChatService.write(out);
+	}
+
+	@Override
+	public void movePiece(int fromrow, int fromcol, int torow, int tocol) {
+		nativeMove(fromrow, fromcol, torow, tocol);
+		sendMove(fromrow, fromcol, torow, tocol);
+	}
+
+	public native void nativeMove(int fromrow, int fromcol, int torow, int tocol);
 }
