@@ -10,15 +10,4 @@ public class Tour extends Piece implements ITour {
 		super(position, color);
 		this.type = ToolsModel.tour;
 	}
-	
-	/*@Override
-	public ArrayList<Coord> mouvementPossibles(){
-		
-		ArrayList<Coord> mvt = new ArrayList<Coord>();
-		
-		
-		
-		 
-		return mvt;
-	}*/
 }

@@ -39,11 +39,6 @@ public class Piece implements IPiece {
 		return dejaBouge;
 	}
 
-	/*@Override
-	public ArrayList<Coord> mouvementPossibles() {
-		return null;
-	}*/
-
 	@Override
 	public void deplacer(Coord target) {
 		position = new Coord(target);
