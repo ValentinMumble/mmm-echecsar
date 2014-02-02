@@ -27,10 +27,6 @@ public class ImageTargetsSplashScreen extends Activity {
 		// Sets the Splash Screen Layout
 		setContentView(R.layout.splash_screen);
 
-		// Start directly the ImageTargets activity for faster testing
-		Intent i = new Intent(ImageTargetsSplashScreen.this, ImageTargets.class);
-		startActivity(i);
-
 		// Generates a Handler to launch the About Screen
 		// after 2 seconds
 		final Handler handler = new Handler();
