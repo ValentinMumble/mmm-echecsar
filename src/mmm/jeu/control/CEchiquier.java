@@ -127,12 +127,9 @@ public class CEchiquier implements ICEchiquier {
 		// verif echec ou echec et mat adversaire
 		VerifCheackMat();
 		
-		//System.out.println("pos dep = "+etatPlateau.get(positionDepart.toString()));
+		//affichage de debug
 		System.out.println("pos arr = "+etatPlateau.get(positionArrivee.toString()).toString());
 		System.out.println();
-		/*System.out.println("pos roi blanc = "+posRoiBlanc +" \n pos roi noir = "+posRoiNoir);
-		System.out.println();*/
-		
 		draw();
 	}
 	
@@ -146,34 +143,35 @@ public class CEchiquier implements ICEchiquier {
 	private void coupPion(ArrayList<Coord> coups, IPiece pion){
 		int x = pion.getCoord().getX();
 		int y = pion.getCoord().getY();
-		
-		if (pion.getColor() == ToolsModel.blanc)
-		{	
-			if (!isOccuped(new Coord(x+1, y)))
-				coups.add(new Coord(x+1, y));
-			if (!pion.getDejaBouge()&&!isOccuped(new Coord(x+2, y)))
-				coups.add(new Coord(x+2, y));
-			
-			// Attention , pour les 2 cas suivants , ça marche car on test la presence AVANT
-			// si on inverse les 2 elements du test on obtiendra un nullpointer !!
-			if (isOccuped(new Coord(x+1, y+1)) && (etatPlateau.get(new Coord(x+1, y+1).toString()).getColor()!= pion.getColor()))
-				coups.add(new Coord(x+1, y+1));
-			if (isOccuped(new Coord(x+1, y-1)) && (etatPlateau.get(new Coord(x+1, y-1).toString()).getColor()!= pion.getColor()))
-				coups.add(new Coord(x+1, y-1));
-		}
-		else 
-		{
-			if (!isOccuped(new Coord(x-1, y)))
-				coups.add(new Coord(x-1, y));
-			if (!pion.getDejaBouge()&&!isOccuped(new Coord(x-2, y)))
-				coups.add(new Coord(x-2, y));
-			
-			// Attention , pour les 2 cas suivants , ça marche car on test la presence AVANT
-			// si on inverse les 2 elements du test on obtiendra un nullpointer !!
-			if (isOccuped(new Coord(x-1, y+1)) && (etatPlateau.get(new Coord(x-1, y+1).toString()).getColor()!= pion.getColor()))
-				coups.add(new Coord(x-1, y+1));
-			if (isOccuped(new Coord(x-1, y-1)) && (etatPlateau.get(new Coord(x-1, y-1).toString()).getColor()!= pion.getColor()))
-				coups.add(new Coord(x-1, y-1));
+		if (x<8 && 1<x){
+			if (pion.getColor() == ToolsModel.blanc)
+			{	
+				if (!isOccuped(new Coord(x+1, y)))
+					coups.add(new Coord(x+1, y));
+				if (!pion.getDejaBouge()&&!isOccuped(new Coord(x+2, y)))
+					coups.add(new Coord(x+2, y));
+				
+				// Attention , pour les 2 cas suivants , ça marche car on test la presence AVANT
+				// si on inverse les 2 elements du test on obtiendra un nullpointer !!
+				if (isOccuped(new Coord(x+1, y+1)) && (etatPlateau.get(new Coord(x+1, y+1).toString()).getColor()!= pion.getColor()))
+					coups.add(new Coord(x+1, y+1));
+				if (isOccuped(new Coord(x+1, y-1)) && (etatPlateau.get(new Coord(x+1, y-1).toString()).getColor()!= pion.getColor()))
+					coups.add(new Coord(x+1, y-1));
+			}
+			else 
+			{
+				if (!isOccuped(new Coord(x-1, y)))
+					coups.add(new Coord(x-1, y));
+				if (!pion.getDejaBouge()&&!isOccuped(new Coord(x-2, y)))
+					coups.add(new Coord(x-2, y));
+				
+				// Attention , pour les 2 cas suivants , ça marche car on test la presence AVANT
+				// si on inverse les 2 elements du test on obtiendra un nullpointer !!
+				if (isOccuped(new Coord(x-1, y+1)) && (etatPlateau.get(new Coord(x-1, y+1).toString()).getColor()!= pion.getColor()))
+					coups.add(new Coord(x-1, y+1));
+				if (isOccuped(new Coord(x-1, y-1)) && (etatPlateau.get(new Coord(x-1, y-1).toString()).getColor()!= pion.getColor()))
+					coups.add(new Coord(x-1, y-1));
+			}
 		}
 	}
 	private void coupTour(ArrayList<Coord> coups, IPiece tour){
@@ -546,12 +544,17 @@ public class CEchiquier implements ICEchiquier {
 	}
 	
 	
-
+	/**
+	 * Getter da la piece qui se situe au coordonnées passées en parametre
+	 */
 	@Override
 	public IPiece getPiece(Coord position) {
 		return etatPlateau.get(position.toString());
 	}
 	
+	/**
+	 * Cette fonction initialise la Map qui contient l'etat du plateau
+	 */
 	private void initPlateau(){
 		etatPlateau = new HashMap<String, IPiece>();
 
