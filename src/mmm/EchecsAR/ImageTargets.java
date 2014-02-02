@@ -218,8 +218,8 @@ public class ImageTargets extends Activity implements Adapter {
 						Toast.LENGTH_SHORT).show();
 				break;
 			case MESSAGE_TOAST:
-				Toast.makeText(getApplicationContext(), (String) msg.obj,
-						Toast.LENGTH_SHORT).show();
+				Toast.makeText(getApplicationContext(), msg.getData().getString(TOAST),
+                        Toast.LENGTH_SHORT).show();
 				break;
 			}
 		}
@@ -1106,9 +1106,10 @@ public class ImageTargets extends Activity implements Adapter {
 	@Override
 	public void displayMessage(String text) {
 		// We use a handler because this thread cannot change the UI
-		Message message = new Message();
-		message.what = MESSAGE_TOAST;
-		message.obj = text;
+		Message message = mHandler.obtainMessage(ImageTargets.MESSAGE_TOAST);
+		Bundle bundle = new Bundle();
+		bundle.putString(ImageTargets.TOAST, text);
+		message.setData(bundle);
 		mHandler.sendMessage(message);
 	}
 
