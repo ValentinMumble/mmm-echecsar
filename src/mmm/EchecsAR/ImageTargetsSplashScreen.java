@@ -31,7 +31,6 @@ public class ImageTargetsSplashScreen extends Activity {
 		Intent i = new Intent(ImageTargetsSplashScreen.this, ImageTargets.class);
 		startActivity(i);
 
-		/*
 		// Generates a Handler to launch the About Screen
 		// after 2 seconds
 		final Handler handler = new Handler();
@@ -42,7 +41,6 @@ public class ImageTargetsSplashScreen extends Activity {
 						AboutScreen.class));
 			}
 		}, 1000L);
-		*/
 	}
 
 	public void onConfigurationChanged(Configuration newConfig) {
