@@ -127,12 +127,9 @@ public class CEchiquier implements ICEchiquier {
 		// verif echec ou echec et mat adversaire
 		VerifCheackMat();
 		
-		//System.out.println("pos dep = "+etatPlateau.get(positionDepart.toString()));
+		//affichage de debug
 		System.out.println("pos arr = "+etatPlateau.get(positionArrivee.toString()).toString());
 		System.out.println();
-		/*System.out.println("pos roi blanc = "+posRoiBlanc +" \n pos roi noir = "+posRoiNoir);
-		System.out.println();*/
-		
 		draw();
 	}
 	
