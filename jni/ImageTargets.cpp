@@ -691,7 +691,7 @@ bool callMovePiece(Piece *piece, int row, int col) {
 }
 
 JNIEXPORT void JNICALL
-Java_mmm_EchecsAR_ImageTargets_movePiece(JNIEnv *, jobject, jint fromrow, jint fromcol, jint torow, jint tocol) {
+Java_mmm_EchecsAR_ImageTargets_nativeMove(JNIEnv *, jobject, jint fromrow, jint fromcol, jint torow, jint tocol) {
 	Piece *piece = getPiece((int) fromrow - 1, (int) fromcol - 1);
 	if (piece != NULL) {
 		piece->row = (int) torow - 1;
