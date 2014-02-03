@@ -1179,4 +1179,21 @@ public class ImageTargets extends Activity implements Adapter {
 	}
 
 	public native void nativeMove(int fromrow, int fromcol, int torow, int tocol);
+
+	@Override
+	public int promotion() {
+		// TODO Auto-generated method stub
+		// fonction appelée lors de la promotion d'unn pion
+		// ajouter l'appel d'un menu pour selectionner le type de piece voulu
+		// le retour sera remplacé par le retour de la selection
+		
+		return ToolsModel.promotionReine;
+	}
+
+	@Override
+	public void replace(Coord coordPion, String pieceType) {
+		// TODO Auto-generated method stub
+		// cette fonction devra remplacer la piece au coordonnée fourni en parametre 
+		// par une piece du type passé en parametre
+	}
 }

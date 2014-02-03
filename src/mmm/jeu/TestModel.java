@@ -27,6 +27,18 @@ public class TestModel {
 			public void displayMessage(String message) {
 				System.out.println(message);
 			}
+
+			@Override
+			public int promotion() {
+				// TODO Auto-generated method stub
+				return ToolsModel.promotionReine;
+			}
+
+			@Override
+			public void replace(Coord coordPion, String pieceType) {
+				// TODO Auto-generated method stub
+				
+			}
 		};
 		ICEchiquier ech = new CEchiquier(adapteur);
 		CEchiquier echImpl = (CEchiquier)ech;
@@ -57,6 +69,10 @@ public class TestModel {
 		ech.deplacerPiece(new Coord(1,7), new Coord(3,6));
 		System.out.println("au tour de "+echImpl.tourDeJoueur);
 		ech.deplacerPiece(new Coord(8,3), new Coord(6,1));*/
+		
+		
+		//ech.deplacerPiece(new Coord(2, 1), new Coord(8, 1));
+		
 		
 
 		// pion blanc
