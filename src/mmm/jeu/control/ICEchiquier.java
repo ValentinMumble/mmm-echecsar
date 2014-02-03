@@ -8,6 +8,7 @@ import mmm.jeu.model.interfaces.IPiece;
 public interface ICEchiquier {
 
 	IPiece getPiece (Coord position);
+	char getTourDeJoueur();
 	
 	boolean isOccuped(Coord position);
 	ArrayList<Coord> mouvementPossibles(Coord coordonneePiece);

@@ -40,7 +40,11 @@ public class CEchiquier implements ICEchiquier {
 	public boolean isOccuped(Coord position) {
 		return etatPlateau.get(position.toString())!=null;
 	}
-	
+
+	@Override
+	public char getTourDeJoueur() {
+		return tourDeJoueur;
+	}
 	
 	/**
 	 * Params  : Coord de la piece que l'on veut deplacer
@@ -631,5 +635,6 @@ public class CEchiquier implements ICEchiquier {
 		
 		System.out.println(draw);
 	}
+
 
 }

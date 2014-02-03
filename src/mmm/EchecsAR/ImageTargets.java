@@ -20,6 +20,7 @@ import java.util.Vector;
 import mmm.bluetooth.BluetoothChatService;
 import mmm.bluetooth.DeviceListActivity;
 import mmm.jeu.control.CEchiquier;
+import mmm.jeu.control.ICEchiquier;
 import mmm.jeu.model.Coord;
 import mmm.jeu.model.ToolsModel;
 import android.app.Activity;
@@ -140,7 +141,7 @@ public class ImageTargets extends Activity implements Adapter {
 
 	private RelativeLayout mUILayout;
 
-	private CEchiquier ech;
+	private ICEchiquier ech;
 
 	// Bluetooth
 	// Local Bluetooth adapter
@@ -1135,7 +1136,7 @@ public class ImageTargets extends Activity implements Adapter {
 	}
 
 	public boolean isWhiteMove() {
-		return ech.tourDeJoueur == ToolsModel.blanc;
+		return ech.getTourDeJoueur() == ToolsModel.blanc;
 	}
 
 	public boolean move(int fromrow, int fromcol, int torow, int tocol) {
