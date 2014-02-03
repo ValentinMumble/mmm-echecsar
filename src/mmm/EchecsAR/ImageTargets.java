@@ -1214,9 +1214,15 @@ public class ImageTargets extends Activity implements Adapter {
 	}
 
 	@Override
-	public void replace(Coord coordPion, String pieceType) {
+	public void replace(Coord coordPion, int pieceType) {
 		// TODO Auto-generated method stub
 		// cette fonction devra remplacer la piece au coordonnée fourni en parametre 
 		// par une piece du type passé en parametre
+		
+		System.out.println("promotion");
+		nativePromotionPion(coordPion.getX(), coordPion.getY(), pieceType);
+		System.out.println("promo done");
 	}
+	
+	public native void nativePromotionPion(int row, int col, int pieceType);
 }

@@ -113,20 +113,9 @@ public class CEchiquier implements ICEchiquier {
 			etatPlateau.remove(positionArrivee.toString());
 		etatPlateau.put(pieceMove.getCoord().toString(), pieceMove);
 		
-		// changement de joueur
-		tourDeJoueur = (tourDeJoueur == ToolsModel.noir) ? ToolsModel.blanc : ToolsModel.noir ;
-		
-		// maj pos roi
-		if (pieceMove.getType().equals(ToolsModel.roi)){
-			if (pieceMove.getColor() == ToolsModel.blanc)
-				posRoiBlanc = pieceMove.getCoord().toString();
-			else
-				posRoiNoir = pieceMove.getCoord().toString();
-		}
-		
 		// promotion du pion
 		if (pieceMove.getType().equals(ToolsModel.pion) && (positionArrivee.getX() == 1 || positionArrivee.getX() == 8)){
-			/*IPiece newPiece;
+			IPiece newPiece;
 			int pieceType = myAdapter.promotion();
 			switch (pieceType) {
 			case ToolsModel.promotionTour :
@@ -147,9 +136,20 @@ public class CEchiquier implements ICEchiquier {
 			
 			etatPlateau.remove(pieceMove.getCoord().toString());
 			etatPlateau.put(newPiece.getCoord().toString(), newPiece);
-			myAdapter.replace(pieceMove.getCoord(), newPiece.getType());*/
+			
+			myAdapter.replace(pieceMove.getCoord(), pieceType);
 		}
+				
+		// changement de joueur
+		tourDeJoueur = (tourDeJoueur == ToolsModel.noir) ? ToolsModel.blanc : ToolsModel.noir ;
 		
+		// maj pos roi
+		if (pieceMove.getType().equals(ToolsModel.roi)){
+			if (pieceMove.getColor() == ToolsModel.blanc)
+				posRoiBlanc = pieceMove.getCoord().toString();
+			else
+				posRoiNoir = pieceMove.getCoord().toString();
+		}
 		
 		// verif echec ou echec et mat adversaire
 		VerifCheackMat();

@@ -35,7 +35,7 @@ public class TestModel {
 			}
 
 			@Override
-			public void replace(Coord coordPion, String pieceType) {
+			public void replace(Coord coordPion, int pieceType) {
 				// TODO Auto-generated method stub
 				
 			}
@@ -70,8 +70,9 @@ public class TestModel {
 		System.out.println("au tour de "+echImpl.tourDeJoueur);
 		ech.deplacerPiece(new Coord(8,3), new Coord(6,1));*/
 		
-		
-		//ech.deplacerPiece(new Coord(2, 1), new Coord(8, 1));
+
+		ech.deplacerPiece(new Coord(2, 1), new Coord(8, 1));
+		ech.deplacerPiece(new Coord(7, 1), new Coord(6, 1));
 		
 		
 

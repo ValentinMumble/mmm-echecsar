@@ -731,6 +731,23 @@ void updatePieceTransform(Piece *piece) {
 	SampleUtils::scalePoseMatrix(pieceScale, pieceScale, pieceScale, transformPtr);
 }
 
+
+// Promotion Piece
+JNIEXPORT void JNICALL
+Java_mmm_EchecsAR_ImageTargets_nativePromotionPion (jint row, jint col, jint pieceType)
+{
+	int type = (int) pieceType;
+	Piece *promu = getPiece((int) row-1, (int) col-1);
+	if (promu != NULL)
+	{
+		promu->vertices = vertices[type];
+		promu->normals = normals[type];
+		promu->texCoords = texCoords[type];
+		promu->numVertices = numVertices[type];
+		updatePieceTransform(promu);
+	}
+}
+
 void handleTouches() {
 	// If there is a new tap that we haven't handled yet:
 	if (touch1.didTap && touch1.startTime > lastTapTime) {
@@ -834,7 +851,7 @@ void displayMessage(char *message) {
 }
 
 void projectScreenPointToPlane(QCAR::Vec2F point, QCAR::Vec3F planeCenter, QCAR::Vec3F planeNormal,
-QCAR::Vec3F &intersection, QCAR::Vec3F &lineStart, QCAR::Vec3F &lineEnd) {
+		QCAR::Vec3F &intersection, QCAR::Vec3F &lineStart, QCAR::Vec3F &lineEnd) {
 	// Window Coordinates to Normalized Device Coordinates
 	QCAR::VideoBackgroundConfig config = QCAR::Renderer::getInstance().getVideoBackgroundConfig();
 
@@ -868,8 +885,8 @@ QCAR::Vec3F &intersection, QCAR::Vec3F &lineStart, QCAR::Vec3F &lineEnd) {
 }
 
 bool linePlaneIntersection(QCAR::Vec3F lineStart, QCAR::Vec3F lineEnd,
-QCAR::Vec3F pointOnPlane, QCAR::Vec3F planeNormal,
-QCAR::Vec3F &intersection) {
+		QCAR::Vec3F pointOnPlane, QCAR::Vec3F planeNormal,
+		QCAR::Vec3F &intersection) {
 	QCAR::Vec3F lineDir = SampleMath::Vec3FSub(lineEnd, lineStart);
 	lineDir = SampleMath::Vec3FNormalize(lineDir);
 
@@ -905,7 +922,7 @@ void configureVideoBackground() {
 	// Get the default video mode:
 	QCAR::CameraDevice& cameraDevice = QCAR::CameraDevice::getInstance();
 	QCAR::VideoMode videoMode = cameraDevice.getVideoMode(
-	QCAR::CameraDevice::MODE_DEFAULT);
+			QCAR::CameraDevice::MODE_DEFAULT);
 
 	// Configure the video background
 	QCAR::VideoBackgroundConfig config;
@@ -932,16 +949,16 @@ void configureVideoBackground() {
 
 		if (config.mSize.data[1] < screenHeight) {
 			LOG(
-			"Correcting rendering background size to handle missmatch between screen and video aspect ratios.");config.mSize.data[0] = screenHeight
+					"Correcting rendering background size to handle missmatch between screen and video aspect ratios.");config.mSize.data[0] = screenHeight
 			* (videoMode.mWidth / (float) videoMode.mHeight);
 			config.mSize.data[1] = screenHeight;
 		}
 	}
 
 	LOG(
-	"Configure Video Background : Video (%d,%d), Screen (%d,%d), mSize (%d,%d)",
-	videoMode.mWidth, videoMode.mHeight, screenWidth, screenHeight,
-	config.mSize.data[0], config.mSize.data[1]);
+			"Configure Video Background : Video (%d,%d), Screen (%d,%d), mSize (%d,%d)",
+			videoMode.mWidth, videoMode.mHeight, screenWidth, screenHeight,
+			config.mSize.data[0], config.mSize.data[1]);
 
 // Set the config:
 	QCAR::Renderer::getInstance().setVideoBackgroundConfig(config);
