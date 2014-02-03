@@ -18,8 +18,6 @@ public class CEchiquier implements ICEchiquier {
 	private String posRoiNoir;
 	
 	private Adapter myAdapter;
-	//TODO : ajouter pour chaque mouvement possible si a la suite de ce mouvement l'un des roi est en echec
-	// si le roi ennemi est en echec appel d'une fonction pour demander l'affichage de l'echec
 	
 	public char tourDeJoueur = ToolsModel.blanc;
 	
@@ -42,7 +40,11 @@ public class CEchiquier implements ICEchiquier {
 	public boolean isOccuped(Coord position) {
 		return etatPlateau.get(position.toString())!=null;
 	}
-	
+
+	@Override
+	public char getTourDeJoueur() {
+		return tourDeJoueur;
+	}
 	
 	/**
 	 * Params  : Coord de la piece que l'on veut deplacer
@@ -120,6 +122,32 @@ public class CEchiquier implements ICEchiquier {
 				posRoiBlanc = pieceMove.getCoord().toString();
 			else
 				posRoiNoir = pieceMove.getCoord().toString();
+		}
+		
+		// promotion du pion
+		if (pieceMove.getType().equals(ToolsModel.pion) && (positionArrivee.getX() == 1 || positionArrivee.getX() == 8)){
+			/*IPiece newPiece;
+			int pieceType = myAdapter.promotion();
+			switch (pieceType) {
+			case ToolsModel.promotionTour :
+				newPiece = new Tour(positionArrivee, pieceMove.getColor()) ;
+				break;
+			case ToolsModel.promotionCavalier :
+				newPiece = new Cavalier(positionArrivee, pieceMove.getColor()) ;
+				break;
+			case ToolsModel.promotionFou :
+				newPiece = new Fou(positionArrivee, pieceMove.getColor()) ;
+				break;
+			case ToolsModel.promotionReine :
+				newPiece = new Reine(positionArrivee, pieceMove.getColor()) ;
+				break;
+			default :
+				newPiece = pieceMove;
+			}
+			
+			etatPlateau.remove(pieceMove.getCoord().toString());
+			etatPlateau.put(newPiece.getCoord().toString(), newPiece);
+			myAdapter.replace(pieceMove.getCoord(), newPiece.getType());*/
 		}
 		
 		
@@ -607,5 +635,6 @@ public class CEchiquier implements ICEchiquier {
 		
 		System.out.println(draw);
 	}
+
 
 }

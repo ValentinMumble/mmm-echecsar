@@ -35,7 +35,6 @@ public class Menu_Fin extends Activity{
 			//((TextView) findViewById(R.id.texte)).setText("Stats");
 			return true;
 		}
-    	
-    	return false;
+		return false;
     }
 }

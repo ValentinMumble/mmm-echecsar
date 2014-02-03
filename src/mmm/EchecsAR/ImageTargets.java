@@ -20,6 +20,7 @@ import java.util.Vector;
 import mmm.bluetooth.BluetoothChatService;
 import mmm.bluetooth.DeviceListActivity;
 import mmm.jeu.control.CEchiquier;
+import mmm.jeu.control.ICEchiquier;
 import mmm.jeu.model.Coord;
 import mmm.jeu.model.ToolsModel;
 import android.app.Activity;
@@ -140,7 +141,7 @@ public class ImageTargets extends Activity implements Adapter {
 
 	private RelativeLayout mUILayout;
 
-	private CEchiquier ech;
+	private ICEchiquier ech;
 
 	// Bluetooth
 	// Local Bluetooth adapter
@@ -208,7 +209,12 @@ public class ImageTargets extends Activity implements Adapter {
 				byte[] readBuf = (byte[]) msg.obj;
 				// construct a string from the valid bytes in the buffer
 				String readMessage = new String(readBuf, 0, msg.arg1);
-				receiveMove(readMessage);
+				if (readMessage.substring(0, 1).equals("M")) {
+					receiveMove(readMessage.substring(1, readMessage.length()));
+				} else {
+					onQCARInitializedNative();
+					reinitialiser();
+				}
 				break;
 			case MESSAGE_DEVICE_NAME:
 				// save the connected device's name
@@ -218,8 +224,9 @@ public class ImageTargets extends Activity implements Adapter {
 						Toast.LENGTH_SHORT).show();
 				break;
 			case MESSAGE_TOAST:
-				Toast.makeText(getApplicationContext(), msg.getData().getString(TOAST),
-                        Toast.LENGTH_SHORT).show();
+				Toast.makeText(getApplicationContext(),
+						msg.getData().getString(TOAST), Toast.LENGTH_SHORT)
+						.show();
 				break;
 			}
 		}
@@ -392,6 +399,10 @@ public class ImageTargets extends Activity implements Adapter {
 		}
 	}
 
+	public void reinitialiser() {
+		ech = new CEchiquier(this);
+	}
+
 	@Override
 	public void onStart() {
 		super.onStart();
@@ -486,14 +497,15 @@ public class ImageTargets extends Activity implements Adapter {
 			mGlView.setVisibility(View.VISIBLE);
 			mGlView.onResume();
 		}
-		
+
 		if (mChatService != null) {
-            // Only if the state is STATE_NONE, do we know that we haven't started already
-            if (mChatService.getState() == BluetoothChatService.STATE_NONE) {
-              // Start the Bluetooth chat services
-              mChatService.start();
-            }
-        }
+			// Only if the state is STATE_NONE, do we know that we haven't
+			// started already
+			if (mChatService.getState() == BluetoothChatService.STATE_NONE) {
+				// Start the Bluetooth chat services
+				mChatService.start();
+			}
+		}
 	}
 
 	private void updateActivityOrientation() {
@@ -624,8 +636,9 @@ public class ImageTargets extends Activity implements Adapter {
 			// Deinitialize QCAR SDK:
 			QCAR.deinit();
 		}
-		
-		if (mChatService != null) mChatService.stop();
+
+		if (mChatService != null)
+			mChatService.stop();
 
 		System.gc();
 	}
@@ -986,12 +999,14 @@ public class ImageTargets extends Activity implements Adapter {
 		final int itemCameraIndex = 0;
 		final int itemAutofocusIndex = 1;
 		final int itemScanForDevices = 2;
+		final int itemNouvellePartie = 3;
 
 		AlertDialog cameraOptionsDialog = null;
 
 		CharSequence[] items = { getString(R.string.menu_flash_on),
 				getString(R.string.menu_contAutofocus_off),
-				getString(R.string.button_scan) };
+				getString(R.string.button_scan),
+				getString(R.string.nouvelle_partie) };
 
 		// Updates list titles according to current state of the options
 		if (mFlash) {
@@ -1062,6 +1077,14 @@ public class ImageTargets extends Activity implements Adapter {
 									new Intent(ImageTargets.this,
 											DeviceListActivity.class),
 									REQUEST_CONNECT_DEVICE_INSECURE);
+							dialog.dismiss();
+						} else if (item == itemNouvellePartie) {
+							String move = "I";
+							byte[] out = move.getBytes();
+							mChatService.write(out);
+
+							onQCARInitializedNative();
+							reinitialiser();
 							dialog.dismiss();
 						}
 
@@ -1135,7 +1158,7 @@ public class ImageTargets extends Activity implements Adapter {
 	}
 
 	public boolean isWhiteMove() {
-		return ech.tourDeJoueur == ToolsModel.blanc;
+		return ech.getTourDeJoueur() == ToolsModel.blanc;
 	}
 
 	public boolean move(int fromrow, int fromcol, int torow, int tocol) {
@@ -1167,7 +1190,7 @@ public class ImageTargets extends Activity implements Adapter {
 	}
 
 	private void sendMove(int fromrow, int fromcol, int torow, int tocol) {
-		String move = fromrow + "," + fromcol + ";" + torow + "," + tocol;
+		String move = "M" + fromrow + "," + fromcol + ";" + torow + "," + tocol;
 		byte[] out = move.getBytes();
 		mChatService.write(out);
 	}
@@ -1179,4 +1202,21 @@ public class ImageTargets extends Activity implements Adapter {
 	}
 
 	public native void nativeMove(int fromrow, int fromcol, int torow, int tocol);
+
+	@Override
+	public int promotion() {
+		// TODO Auto-generated method stub
+		// fonction appelée lors de la promotion d'unn pion
+		// ajouter l'appel d'un menu pour selectionner le type de piece voulu
+		// le retour sera remplacé par le retour de la selection
+		
+		return ToolsModel.promotionReine;
+	}
+
+	@Override
+	public void replace(Coord coordPion, String pieceType) {
+		// TODO Auto-generated method stub
+		// cette fonction devra remplacer la piece au coordonnée fourni en parametre 
+		// par une piece du type passé en parametre
+	}
 }
