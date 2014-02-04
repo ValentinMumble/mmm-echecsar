@@ -12,9 +12,9 @@ public class ToolsModel {
 	public final static char blanc = 'W';
 	public final static char noir = 'B';
 
-	public final static int promotionTour 		= 1;
-	public final static int promotionCavalier 	= 2;
-	public final static int promotionFou 		= 3;
-	public final static int promotionReine 		= 4;
+	public final static int promotionTour 		= 0;
+	public final static int promotionCavalier 	= 1;
+	public final static int promotionFou 		= 2;
+	public final static int promotionReine 		= 3;
 	
 }

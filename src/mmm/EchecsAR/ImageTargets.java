@@ -1204,18 +1204,22 @@ public class ImageTargets extends Activity implements Adapter {
 
 	@Override
 	public int promotion() {
-		// TODO Auto-generated method stub
-		// fonction appel�e lors de la promotion d'unn pion
+		// fonction appelÈe lors de la promotion d'unn pion
 		// ajouter l'appel d'un menu pour selectionner le type de piece voulu
-		// le retour sera remplac� par le retour de la selection
+		// le retour sera remplacÈ par le retour de la selection
 		
 		return ToolsModel.promotionReine;
 	}
 
 	@Override
-	public void replace(Coord coordPion, String pieceType) {
-		// TODO Auto-generated method stub
-		// cette fonction devra remplacer la piece au coordonn�e fourni en parametre 
-		// par une piece du type pass� en parametre
+	public void replace(Coord coordPion, int pieceType) {
+		// cette fonction devra remplacer la piece au coordonnÈe fourni en parametre 
+		// par une piece du type passÈ en parametre
+		
+		System.out.println("promotion");
+		nativePromotionPion(coordPion.getX(), coordPion.getY(), pieceType);
+		System.out.println("promo done");
 	}
+	
+	public native void nativePromotionPion(int row, int col, int pieceType);
 }

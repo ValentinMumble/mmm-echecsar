@@ -33,8 +33,8 @@ public class CEchiquier implements ICEchiquier {
 	}
 	
 	/**
-	 * Params : CoordonnÈes de la case ‡ tester
-	 * Retour : Indique si la case dont les coord sont passÈes en param est occupÈe
+	 * Params : Coordonn√àes de la case ‚Ä° tester
+	 * Retour : Indique si la case dont les coord sont pass√àes en param est occup√àe
 	 */
 	@Override
 	public boolean isOccuped(Coord position) {
@@ -113,20 +113,9 @@ public class CEchiquier implements ICEchiquier {
 			etatPlateau.remove(positionArrivee.toString());
 		etatPlateau.put(pieceMove.getCoord().toString(), pieceMove);
 		
-		// changement de joueur
-		tourDeJoueur = (tourDeJoueur == ToolsModel.noir) ? ToolsModel.blanc : ToolsModel.noir ;
-		
-		// maj pos roi
-		if (pieceMove.getType().equals(ToolsModel.roi)){
-			if (pieceMove.getColor() == ToolsModel.blanc)
-				posRoiBlanc = pieceMove.getCoord().toString();
-			else
-				posRoiNoir = pieceMove.getCoord().toString();
-		}
-		
 		// promotion du pion
 		if (pieceMove.getType().equals(ToolsModel.pion) && (positionArrivee.getX() == 1 || positionArrivee.getX() == 8)){
-			/*IPiece newPiece;
+			IPiece newPiece;
 			int pieceType = myAdapter.promotion();
 			switch (pieceType) {
 			case ToolsModel.promotionTour :
@@ -147,9 +136,20 @@ public class CEchiquier implements ICEchiquier {
 			
 			etatPlateau.remove(pieceMove.getCoord().toString());
 			etatPlateau.put(newPiece.getCoord().toString(), newPiece);
-			myAdapter.replace(pieceMove.getCoord(), newPiece.getType());*/
+			
+			myAdapter.replace(positionDepart, pieceType);
 		}
+				
+		// changement de joueur
+		tourDeJoueur = (tourDeJoueur == ToolsModel.noir) ? ToolsModel.blanc : ToolsModel.noir ;
 		
+		// maj pos roi
+		if (pieceMove.getType().equals(ToolsModel.roi)){
+			if (pieceMove.getColor() == ToolsModel.blanc)
+				posRoiBlanc = pieceMove.getCoord().toString();
+			else
+				posRoiNoir = pieceMove.getCoord().toString();
+		}
 		
 		// verif echec ou echec et mat adversaire
 		VerifCheackMat();
@@ -162,8 +162,8 @@ public class CEchiquier implements ICEchiquier {
 	
 	/**
 	 * 
-	 * Rmq  : la prise au passage n'est pas implementÈe
-	 * Rmq2 : normalement pas d'erreur au bord du plateau si la promotion est bien implementÈe
+	 * Rmq  : la prise au passage n'est pas implement√àe
+	 * Rmq2 : normalement pas d'erreur au bord du plateau si la promotion est bien implement√àe
 	 * @param coups
 	 * @param pion
 	 */
@@ -178,7 +178,7 @@ public class CEchiquier implements ICEchiquier {
 				if (!pion.getDejaBouge()&&!isOccuped(new Coord(x+2, y)))
 					coups.add(new Coord(x+2, y));
 				
-				// Attention , pour les 2 cas suivants , Áa marche car on test la presence AVANT
+				// Attention , pour les 2 cas suivants , √Åa marche car on test la presence AVANT
 				// si on inverse les 2 elements du test on obtiendra un nullpointer !!
 				if (isOccuped(new Coord(x+1, y+1)) && (etatPlateau.get(new Coord(x+1, y+1).toString()).getColor()!= pion.getColor()))
 					coups.add(new Coord(x+1, y+1));
@@ -192,7 +192,7 @@ public class CEchiquier implements ICEchiquier {
 				if (!pion.getDejaBouge()&&!isOccuped(new Coord(x-2, y)))
 					coups.add(new Coord(x-2, y));
 				
-				// Attention , pour les 2 cas suivants , Áa marche car on test la presence AVANT
+				// Attention , pour les 2 cas suivants , √Åa marche car on test la presence AVANT
 				// si on inverse les 2 elements du test on obtiendra un nullpointer !!
 				if (isOccuped(new Coord(x-1, y+1)) && (etatPlateau.get(new Coord(x-1, y+1).toString()).getColor()!= pion.getColor()))
 					coups.add(new Coord(x-1, y+1));
@@ -513,22 +513,25 @@ public class CEchiquier implements ICEchiquier {
 				}
 				
 			}
-			
+			String joueur = "Black";
+			if (tourDeJoueur == ToolsModel.blanc) {
+				joueur = "White";
+			}
 			if (!mat)
 				// action lors de l'echec
-				myAdapter.displayMessage("Joueur "+tourDeJoueur+" est Echec");
+				myAdapter.displayMessage(joueur+" player is in check");
 			else
 				// action lors du mat
-				myAdapter.displayMessage("Joueur "+tourDeJoueur+" est Echec&Mat");
+				myAdapter.displayMessage(joueur+" player is in checkmate");
 		}
 		
 	}
 	
 	/**
-	 * Cette fonction renvoi la liste des coups valide , c'est ‡ dire que le roi ne soit pas en echec aprËs le mouvement
+	 * Cette fonction renvoi la liste des coups valide , c'est ‚Ä° dire que le roi ne soit pas en echec apr√ãs le mouvement
 	 * @param coups : liste des coups a valider
 	 * @param depart : position de la piece a bouger
-	 * @return la liste des coups validÈs
+	 * @return la liste des coups valid√às
 	 */
 	private ArrayList<Coord> validationCoups (ArrayList<Coord> coups, Coord depart){
 		ArrayList<Coord> coupsValide = new ArrayList<Coord>(coups);
@@ -572,7 +575,7 @@ public class CEchiquier implements ICEchiquier {
 	
 	
 	/**
-	 * Getter da la piece qui se situe au coordonnÈes passÈes en parametre
+	 * Getter da la piece qui se situe au coordonn√àes pass√àes en parametre
 	 */
 	@Override
 	public IPiece getPiece(Coord position) {

@@ -704,6 +704,24 @@ Java_mmm_EchecsAR_ImageTargets_nativeMove(JNIEnv *, jobject, jint fromrow, jint 
 	}
 }
 
+// Promotion Piece
+JNIEXPORT void JNICALL
+Java_mmm_EchecsAR_ImageTargets_nativePromotionPion (JNIEnv *, jobject, jint row, jint col, jint pieceType)
+{
+	int type = (int) pieceType;
+	Piece *promu = getPiece((int) row-1, (int) col-1);
+	LOG("ttes: %d %d %d", type, (int) row-1, (int) col-1);
+	if (promu != NULL)
+	{
+
+		promu->vertices = vertices[type];
+		promu->normals = normals[type];
+		promu->texCoords = texCoords[type];
+		promu->numVertices = numVertices[type];
+		updatePieceTransform(promu);
+	}
+}
+
 Piece *getPiece(int row, int col) {
 	Piece *piece = NULL;
 	for (int i = 0; i < N / 2; i++) {

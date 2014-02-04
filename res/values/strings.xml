@@ -6,7 +6,7 @@
     <string name="activity_splash_title">Echecs AR</string>
     <string name="activity_splash_subtitle">much fun</string>
     <string name="about_title">About</string>
-    <string name="about_text"></string>
+    <string name="about_text">Play chess in augmented reality using your device camera and a printed board!</string>
     <string name="button_start">Play!</string>
     <string name="content_desc_vuforia_logo">Vuforia Logo</string>
     <string name="content_desc_vuforia_background">Vuforia Background</string>
@@ -39,13 +39,5 @@
     <string name="secure_connect">Connect a device - Secure</string>
     <string name="insecure_connect">Connect a device - Insecure</string>
     <string name="discoverable">Make discoverable</string>
-
-    <!-- Menu Fin de Partie -->
-    <string name="menu_fin">Fin de Partie</string>
-    <string name="message_clic_menu">Fin de Partie 
-        Appuyer sur menu</string>
-    <string name="new_game">Rejouer une partie</string>
-    <string name="return_menu">Retour au menu principal</string>
-    <string name="quitter">Quitter</string>
 
 </resources>
