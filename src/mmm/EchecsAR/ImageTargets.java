@@ -17,7 +17,7 @@ import java.lang.reflect.Field;
 import java.util.List;
 import java.util.Vector;
 
-import mmm.bluetooth.BluetoothChatService;
+import mmm.bluetooth.BluetoothService;
 import mmm.bluetooth.DeviceListActivity;
 import mmm.jeu.control.CEchiquier;
 import mmm.jeu.control.ICEchiquier;
@@ -72,7 +72,7 @@ public class ImageTargets extends Activity implements Adapter {
 	private static final String NATIVE_LIB_QCAR = "QCAR";
 
 	// Bluetooth
-	// Message types sent from the BluetoothChatService Handler
+	// Message types sent from the BluetoothService Handler
 	public static final int MESSAGE_STATE_CHANGE = 1;
 	public static final int MESSAGE_READ = 2;
 	public static final int MESSAGE_WRITE = 3;
@@ -84,7 +84,7 @@ public class ImageTargets extends Activity implements Adapter {
 	private static final int REQUEST_CONNECT_DEVICE_INSECURE = 2;
 	private static final int REQUEST_ENABLE_BT = 3;
 
-	// Key names received from the BluetoothChatService Handler
+	// Key names received from the BluetoothService Handler
 	public static final String DEVICE_NAME = "device_name";
 	public static final String TOAST = "toast";
 
@@ -146,8 +146,8 @@ public class ImageTargets extends Activity implements Adapter {
 	// Bluetooth
 	// Local Bluetooth adapter
 	private BluetoothAdapter mBluetoothAdapter = null;
-	// Member object for the chat services
-	private BluetoothChatService mChatService = null;
+	// Member object for the bluetooth service
+	private BluetoothService mBluetoothService = null;
 	// Name of the connected device
 	private String mConnectedDeviceName = null;
 
@@ -191,12 +191,12 @@ public class ImageTargets extends Activity implements Adapter {
 			switch (msg.what) {
 			case MESSAGE_STATE_CHANGE:
 				switch (msg.arg1) {
-				case BluetoothChatService.STATE_CONNECTED:
+				case BluetoothService.STATE_CONNECTED:
 					break;
-				case BluetoothChatService.STATE_CONNECTING:
+				case BluetoothService.STATE_CONNECTING:
 					break;
-				case BluetoothChatService.STATE_LISTEN:
-				case BluetoothChatService.STATE_NONE:
+				case BluetoothService.STATE_LISTEN:
+				case BluetoothService.STATE_NONE:
 					break;
 				}
 				break;
@@ -408,17 +408,16 @@ public class ImageTargets extends Activity implements Adapter {
 		super.onStart();
 
 		// If BT is not on, request that it be enabled.
-		// setupChat() will then be called during onActivityResult
 		if (!mBluetoothAdapter.isEnabled()) {
 			Intent enableIntent = new Intent(
 					BluetoothAdapter.ACTION_REQUEST_ENABLE);
 			startActivityForResult(enableIntent, 3);
-			// Otherwise, setup the chat session
+			// Otherwise, setup the bluetooth session
 		} else {
-			if (mChatService == null) {
-				// Initialize the BluetoothChatService to perform bluetooth
+			if (mBluetoothService == null) {
+				// Initialize the BluetoothService to perform bluetooth
 				// connections
-				mChatService = new BluetoothChatService(this, mHandler);
+				mBluetoothService = new BluetoothService(this, mHandler);
 			}
 		}
 	}
@@ -498,12 +497,12 @@ public class ImageTargets extends Activity implements Adapter {
 			mGlView.onResume();
 		}
 
-		if (mChatService != null) {
+		if (mBluetoothService != null) {
 			// Only if the state is STATE_NONE, do we know that we haven't
 			// started already
-			if (mChatService.getState() == BluetoothChatService.STATE_NONE) {
-				// Start the Bluetooth chat services
-				mChatService.start();
+			if (mBluetoothService.getState() == BluetoothService.STATE_NONE) {
+				// Start the Bluetooth services
+				mBluetoothService.start();
 			}
 		}
 	}
@@ -637,8 +636,8 @@ public class ImageTargets extends Activity implements Adapter {
 			QCAR.deinit();
 		}
 
-		if (mChatService != null)
-			mChatService.stop();
+		if (mBluetoothService != null)
+			mBluetoothService.stop();
 
 		System.gc();
 	}
@@ -999,14 +998,14 @@ public class ImageTargets extends Activity implements Adapter {
 		final int itemCameraIndex = 0;
 		final int itemAutofocusIndex = 1;
 		final int itemScanForDevices = 2;
-		final int itemNouvellePartie = 3;
+		final int itemNewGame = 3;
 
 		AlertDialog cameraOptionsDialog = null;
 
 		CharSequence[] items = { getString(R.string.menu_flash_on),
 				getString(R.string.menu_contAutofocus_off),
 				getString(R.string.button_scan),
-				getString(R.string.nouvelle_partie) };
+				getString(R.string.new_game) };
 
 		// Updates list titles according to current state of the options
 		if (mFlash) {
@@ -1078,10 +1077,10 @@ public class ImageTargets extends Activity implements Adapter {
 											DeviceListActivity.class),
 									REQUEST_CONNECT_DEVICE_INSECURE);
 							dialog.dismiss();
-						} else if (item == itemNouvellePartie) {
+						} else if (item == itemNewGame) {
 							String move = "I";
 							byte[] out = move.getBytes();
-							mChatService.write(out);
+							mBluetoothService.write(out);
 
 							onQCARInitializedNative();
 							reinitialiser();
@@ -1114,8 +1113,8 @@ public class ImageTargets extends Activity implements Adapter {
 		case REQUEST_ENABLE_BT:
 			// When the request to enable Bluetooth returns
 			if (resultCode == Activity.RESULT_OK) {
-				// Bluetooth is now enabled, so set up a chat session
-				mChatService = new BluetoothChatService(this, mHandler);
+				// Bluetooth is now enabled, so set up a session
+				mBluetoothService = new BluetoothService(this, mHandler);
 			} else {
 				// User did not enable Bluetooth or an error occurred
 				Toast.makeText(this, "Bluetooth non actif", Toast.LENGTH_SHORT)
@@ -1132,7 +1131,7 @@ public class ImageTargets extends Activity implements Adapter {
 		// Get the BluetoothDevice object
 		BluetoothDevice device = mBluetoothAdapter.getRemoteDevice(address);
 		// Attempt to connect to the device
-		mChatService.connect(device, secure);
+		mBluetoothService.connect(device, secure);
 	}
 
 	// Called from native to display a message
@@ -1192,7 +1191,7 @@ public class ImageTargets extends Activity implements Adapter {
 	private void sendMove(int fromrow, int fromcol, int torow, int tocol) {
 		String move = "M" + fromrow + "," + fromcol + ";" + torow + "," + tocol;
 		byte[] out = move.getBytes();
-		mChatService.write(out);
+		mBluetoothService.write(out);
 	}
 
 	@Override
@@ -1206,9 +1205,9 @@ public class ImageTargets extends Activity implements Adapter {
 	@Override
 	public int promotion() {
 		// TODO Auto-generated method stub
-		// fonction appelée lors de la promotion d'unn pion
+		// fonction appelï¿½e lors de la promotion d'unn pion
 		// ajouter l'appel d'un menu pour selectionner le type de piece voulu
-		// le retour sera remplacé par le retour de la selection
+		// le retour sera remplacï¿½ par le retour de la selection
 		
 		return ToolsModel.promotionReine;
 	}
@@ -1216,7 +1215,7 @@ public class ImageTargets extends Activity implements Adapter {
 	@Override
 	public void replace(Coord coordPion, String pieceType) {
 		// TODO Auto-generated method stub
-		// cette fonction devra remplacer la piece au coordonnée fourni en parametre 
-		// par une piece du type passé en parametre
+		// cette fonction devra remplacer la piece au coordonnï¿½e fourni en parametre 
+		// par une piece du type passï¿½ en parametre
 	}
 }

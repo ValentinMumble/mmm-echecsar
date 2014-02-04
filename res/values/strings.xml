@@ -5,9 +5,9 @@
     <string name="app_description">Jeu d\'échecs en réalité augmentée !</string>
     <string name="activity_splash_title">Echecs AR</string>
     <string name="activity_splash_subtitle">much fun</string>
-    <string name="about_title">A propos</string>
-    <string name="about_text">Jouez aux échecs en réalité augmentée grâce a votre caméra et votre échiquier imprimé !</string>
-    <string name="button_start">Jouez !</string>
+    <string name="about_title">About</string>
+    <string name="about_text"></string>
+    <string name="button_start">Play!</string>
     <string name="content_desc_vuforia_logo">Vuforia Logo</string>
     <string name="content_desc_vuforia_background">Vuforia Background</string>
     <string name="menu_flash_on">Flash On</string>
@@ -15,7 +15,8 @@
     <string name="menu_contAutofocus_on">Cont. Autofocus On</string>
     <string name="menu_contAutofocus_off">Cont. Autofocus Off</string>
     <string name="menu_camera_title">Options</string>
-    <string name="nouvelle_partie">Nouvelle partie</string>
+    <string name="new_game">New game</string>
+    
 
     <!-- BluetoothChat -->
     <string name="send">Send</string>
