@@ -204,7 +204,7 @@ public class CEchiquier implements ICEchiquier {
 			{	
 				if (!isOccuped(new Coord(x+1, y)))
 					coups.add(new Coord(x+1, y));
-				if (!pion.getDejaBouge()&&!isOccuped(new Coord(x+2, y)))
+				if (!pion.getDejaBouge()&&!isOccuped(new Coord(x+1, y))&&!isOccuped(new Coord(x+2, y)))
 					coups.add(new Coord(x+2, y));
 				
 				// Attention , pour les 2 cas suivants , Ã�a marche car on test la presence AVANT
@@ -223,7 +223,7 @@ public class CEchiquier implements ICEchiquier {
 			{
 				if (!isOccuped(new Coord(x-1, y)))
 					coups.add(new Coord(x-1, y));
-				if (!pion.getDejaBouge()&&!isOccuped(new Coord(x-2, y)))
+				if (!pion.getDejaBouge()&&!isOccuped(new Coord(x-1, y))&&!isOccuped(new Coord(x-2, y)))
 					coups.add(new Coord(x-2, y));
 				
 				// Attention , pour les 2 cas suivants , Ã�a marche car on test la presence AVANT
