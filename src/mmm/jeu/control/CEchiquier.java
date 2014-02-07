@@ -99,6 +99,13 @@ public class CEchiquier implements ICEchiquier {
 			 tour.deplacer(new Coord(positionArrivee.getX(),6));
 			 etatPlateau.put(tour.getCoord().toString(), tour);
 			 myAdapter.movePiece(positionArrivee.getX(), 8, positionArrivee.getX(), 6);
+			 
+			 if (tourDeJoueur == ToolsModel.blanc) {
+				 myAdapter.displayMessage("White player has made a small rock");
+			 } else {
+				 myAdapter.displayMessage("Black player has made a small rock");
+
+			 }
 		}
 		else if (testGrandRock(pieceMove, positionDepart, positionArrivee)){
 			 IPiece tour = etatPlateau.get(new Coord(positionArrivee.getX(), 1).toString());
@@ -107,12 +114,20 @@ public class CEchiquier implements ICEchiquier {
 			 tour.deplacer(new Coord(positionArrivee.getX(),4));
 			 etatPlateau.put(tour.getCoord().toString(), tour);
 			 myAdapter.movePiece(positionArrivee.getX(), 1, positionArrivee.getX(), 4);
+			 if (tourDeJoueur == ToolsModel.blanc) {
+				 myAdapter.displayMessage("White player has made a big rock");
+			 } else {
+				 myAdapter.displayMessage("Black player has made a big rock");
+
+			 }
 		}
 
 		// prise au passage , destruction du pion adverse
 		if (pieceMove.getType().equals(ToolsModel.pion) && testPrisePassage(positionDepart)){
 			etatPlateau.remove(lastPieceMoved.getCoord().toString());
 			myAdapter.killPiece(lastPieceMoved.getCoord());
+			 myAdapter.displayMessage("En passant capture");
+
 		}
 		
 		etatPlateau.remove(pieceMove.getCoord().toString());
@@ -146,6 +161,8 @@ public class CEchiquier implements ICEchiquier {
 			etatPlateau.put(newPiece.getCoord().toString(), newPiece);
 			
 			myAdapter.replace(positionDepart, pieceType);
+			 myAdapter.displayMessage("The pawn has been promoted as a Queen");
+
 		}
 		
 		// maj info pour prise au passage
