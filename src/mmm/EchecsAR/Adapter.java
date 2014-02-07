@@ -7,4 +7,5 @@ public interface Adapter {
 	void displayMessage (String message);
 	int promotion();
 	void replace(Coord coordPion, int pieceType);
+	void killPiece(Coord coordPiece);
 }

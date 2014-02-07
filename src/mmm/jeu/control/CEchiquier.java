@@ -13,13 +13,15 @@ import mmm.jeu.model.pieces.*;
 
 public class CEchiquier implements ICEchiquier {
 
-	public Map<String, IPiece> etatPlateau;
+	private Map<String, IPiece> etatPlateau;
 	private String posRoiBlanc;
 	private String posRoiNoir;
 	
 	private Adapter myAdapter;
 	
-	public char tourDeJoueur = ToolsModel.blanc;
+	private char tourDeJoueur = ToolsModel.blanc;
+	private int origineLineLastMoved = 0;
+	private IPiece lastPieceMoved = null;
 	
 	public CEchiquier(Adapter myAdapter){
 		initPlateau();
@@ -33,8 +35,8 @@ public class CEchiquier implements ICEchiquier {
 	}
 	
 	/**
-	 * Params : CoordonnÈes de la case ‡ tester
-	 * Retour : Indique si la case dont les coord sont passÈes en param est occupÈe
+	 * Params : CoordonnÃˆes de la case â€¡ tester
+	 * Retour : Indique si la case dont les coord sont passÃˆes en param est occupÃˆe
 	 */
 	@Override
 	public boolean isOccuped(Coord position) {
@@ -106,6 +108,12 @@ public class CEchiquier implements ICEchiquier {
 			 etatPlateau.put(tour.getCoord().toString(), tour);
 			 myAdapter.movePiece(positionArrivee.getX(), 1, positionArrivee.getX(), 4);
 		}
+
+		// prise au passage , destruction du pion adverse
+		if (pieceMove.getType().equals(ToolsModel.pion) && testPrisePassage(positionDepart)){
+			etatPlateau.remove(lastPieceMoved.getCoord().toString());
+			myAdapter.killPiece(lastPieceMoved.getCoord());
+		}
 		
 		etatPlateau.remove(pieceMove.getCoord().toString());
 		pieceMove.deplacer(positionArrivee);
@@ -139,6 +147,10 @@ public class CEchiquier implements ICEchiquier {
 			
 			myAdapter.replace(positionDepart, pieceType);
 		}
+		
+		// maj info pour prise au passage
+		lastPieceMoved = new Piece(pieceMove);
+		origineLineLastMoved = positionDepart.getX();
 				
 		// changement de joueur
 		tourDeJoueur = (tourDeJoueur == ToolsModel.noir) ? ToolsModel.blanc : ToolsModel.noir ;
@@ -162,8 +174,8 @@ public class CEchiquier implements ICEchiquier {
 	
 	/**
 	 * 
-	 * Rmq  : la prise au passage n'est pas implementÈe
-	 * Rmq2 : normalement pas d'erreur au bord du plateau si la promotion est bien implementÈe
+	 * Rmq  : la prise au passage n'est pas implementÃˆe
+	 * Rmq2 : normalement pas d'erreur au bord du plateau si la promotion est bien implementÃˆe
 	 * @param coups
 	 * @param pion
 	 */
@@ -178,12 +190,17 @@ public class CEchiquier implements ICEchiquier {
 				if (!pion.getDejaBouge()&&!isOccuped(new Coord(x+2, y)))
 					coups.add(new Coord(x+2, y));
 				
-				// Attention , pour les 2 cas suivants , Áa marche car on test la presence AVANT
+				// Attention , pour les 2 cas suivants , Ã�a marche car on test la presence AVANT
 				// si on inverse les 2 elements du test on obtiendra un nullpointer !!
 				if (isOccuped(new Coord(x+1, y+1)) && (etatPlateau.get(new Coord(x+1, y+1).toString()).getColor()!= pion.getColor()))
 					coups.add(new Coord(x+1, y+1));
 				if (isOccuped(new Coord(x+1, y-1)) && (etatPlateau.get(new Coord(x+1, y-1).toString()).getColor()!= pion.getColor()))
 					coups.add(new Coord(x+1, y-1));
+				
+				// coups de la prise au passage
+				if (x==5 && testPrisePassage(pion.getCoord())){
+					coups.add(new Coord(6, lastPieceMoved.getCoord().getY()));
+				}
 			}
 			else 
 			{
@@ -192,12 +209,17 @@ public class CEchiquier implements ICEchiquier {
 				if (!pion.getDejaBouge()&&!isOccuped(new Coord(x-2, y)))
 					coups.add(new Coord(x-2, y));
 				
-				// Attention , pour les 2 cas suivants , Áa marche car on test la presence AVANT
+				// Attention , pour les 2 cas suivants , Ã�a marche car on test la presence AVANT
 				// si on inverse les 2 elements du test on obtiendra un nullpointer !!
 				if (isOccuped(new Coord(x-1, y+1)) && (etatPlateau.get(new Coord(x-1, y+1).toString()).getColor()!= pion.getColor()))
 					coups.add(new Coord(x-1, y+1));
 				if (isOccuped(new Coord(x-1, y-1)) && (etatPlateau.get(new Coord(x-1, y-1).toString()).getColor()!= pion.getColor()))
 					coups.add(new Coord(x-1, y-1));
+
+				// coups de la prise au passage
+				if (x==4 && testPrisePassage(pion.getCoord())){
+					coups.add(new Coord(3, lastPieceMoved.getCoord().getY()));
+				}
 			}
 		}
 	}
@@ -470,6 +492,30 @@ public class CEchiquier implements ICEchiquier {
 		return pasEchec;
 	}
 	
+	private boolean testPrisePassage(Coord dep){
+		boolean priseOK = false;
+		
+		boolean isWhite = (tourDeJoueur == ToolsModel.blanc);
+		if (lastPieceMoved != null && lastPieceMoved.getType().equals(ToolsModel.pion)){
+			if (isWhite && lastPieceMoved.getCoord().getX() == 5 && origineLineLastMoved == 7 &&
+					!isOccuped(new Coord(lastPieceMoved.getCoord().getX()+1, lastPieceMoved.getCoord().getY()))){
+				if (dep.getX() == 5 && 
+						(dep.getY() == lastPieceMoved.getCoord().getY()-1 || dep.getY() == lastPieceMoved.getCoord().getY()+1)){
+					return etatPlateau.get(dep.toString()).getType().equals(ToolsModel.pion);
+				}
+			}
+			else if (!isWhite && lastPieceMoved.getCoord().getX() == 4 && origineLineLastMoved == 2 &&
+					!isOccuped(new Coord(lastPieceMoved.getCoord().getX()-1, lastPieceMoved.getCoord().getY()))){
+				if (dep.getX() == 4 && 
+						(dep.getY() == lastPieceMoved.getCoord().getY()-1 || dep.getY() == lastPieceMoved.getCoord().getY()+1)){
+					return etatPlateau.get(dep.toString()).getType().equals(ToolsModel.pion);
+				}
+			}
+		}
+		
+		return priseOK;
+	}
+	
 	public boolean isEnEchec (char kingColor){
 		
 		Map<String, IPiece> clone = new HashMap<String, IPiece>(etatPlateau);
@@ -528,10 +574,10 @@ public class CEchiquier implements ICEchiquier {
 	}
 	
 	/**
-	 * Cette fonction renvoi la liste des coups valide , c'est ‡ dire que le roi ne soit pas en echec aprËs le mouvement
+	 * Cette fonction renvoi la liste des coups valide , c'est â€¡ dire que le roi ne soit pas en echec aprÃ‹s le mouvement
 	 * @param coups : liste des coups a valider
 	 * @param depart : position de la piece a bouger
-	 * @return la liste des coups validÈs
+	 * @return la liste des coups validÃˆs
 	 */
 	private ArrayList<Coord> validationCoups (ArrayList<Coord> coups, Coord depart){
 		ArrayList<Coord> coupsValide = new ArrayList<Coord>(coups);
@@ -575,7 +621,7 @@ public class CEchiquier implements ICEchiquier {
 	
 	
 	/**
-	 * Getter da la piece qui se situe au coordonnÈes passÈes en parametre
+	 * Getter da la piece qui se situe au coordonnÃˆes passÃˆes en parametre
 	 */
 	@Override
 	public IPiece getPiece(Coord position) {

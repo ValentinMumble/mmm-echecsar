@@ -722,6 +722,15 @@ Java_mmm_EchecsAR_ImageTargets_nativePromotionPion (JNIEnv *, jobject, jint row,
 	}
 }
 
+// Remove Piece (pour la prise au passage)
+JNIEXPORT void JNICALL
+Java_mmm_EchecsAR_ImageTargets_nativeRemovePiece (JNIEnv *, jobject, jint row, jint col) {
+	Piece *kill = getPiece((int) row-1, (int) col-1);
+	if (kill != NULL){
+		kill->isAlive = false;
+	}
+}
+
 Piece *getPiece(int row, int col) {
 	Piece *piece = NULL;
 	for (int i = 0; i < N / 2; i++) {

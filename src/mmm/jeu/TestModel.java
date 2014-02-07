@@ -7,7 +7,6 @@ import mmm.jeu.control.CEchiquier;
 import mmm.jeu.control.ICEchiquier;
 import mmm.jeu.model.Coord;
 import mmm.jeu.model.ToolsModel;
-import mmm.jeu.model.pieces.Tour;
 
 public class TestModel {
 
@@ -39,6 +38,12 @@ public class TestModel {
 				// TODO Auto-generated method stub
 				
 			}
+
+			@Override
+			public void killPiece(Coord coordPiece) {
+				// TODO Auto-generated method stub
+				
+			}
 		};
 		ICEchiquier ech = new CEchiquier(adapteur);
 		CEchiquier echImpl = (CEchiquier)ech;
@@ -56,6 +61,16 @@ public class TestModel {
 		test = ech.mouvementPossibles(new Coord(1,2));
 		if (test != null)
 			System.out.println("cavalier mouv ?"+ test.toString());
+
+		ech.deplacerPiece(new Coord(2,5) , new Coord(5,5));
+		ech.deplacerPiece(new Coord(7,4) , new Coord(5,4));
+		
+		test = ech.mouvementPossibles(new Coord(5,5));
+		System.out.println("prise ? "+test.toString());
+		
+		ech.deplacerPiece(new Coord(5,5), new Coord(6,4));
+		
+		
 		
 		/*System.out.println("au tour de "+echImpl.tourDeJoueur);
 		ech.deplacerPiece(new Coord(2,5), new Coord(4,5));
@@ -69,7 +84,7 @@ public class TestModel {
 		ech.deplacerPiece(new Coord(1,7), new Coord(3,6));
 		System.out.println("au tour de "+echImpl.tourDeJoueur);
 		ech.deplacerPiece(new Coord(8,3), new Coord(6,1));*/
-		
+		/*
 
 		ech.deplacerPiece(new Coord(2, 1), new Coord(8, 1));
 		ech.deplacerPiece(new Coord(7, 1), new Coord(6, 1));
@@ -101,7 +116,7 @@ public class TestModel {
 		// roi escape
 		ech.deplacerPiece(new Coord(8,5), new Coord(7,5));
 		// cavalier met echec et mat
-		ech.deplacerPiece(new Coord(3,3), new Coord(5,4));
+		ech.deplacerPiece(new Coord(3,3), new Coord(5,4));*/
 		
 		
 		

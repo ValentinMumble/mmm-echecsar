@@ -1222,4 +1222,11 @@ public class ImageTargets extends Activity implements Adapter {
 	}
 	
 	public native void nativePromotionPion(int row, int col, int pieceType);
+	
+	@Override
+	public void killPiece(Coord coordPiece) {
+		nativeRemovePiece(coordPiece.getX(), coordPiece.getY());
+	}
+	
+	public native void nativeRemovePiece(int row, int col);
 }
